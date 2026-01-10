@@ -9,7 +9,7 @@ const SozlesmeForm = ({ onSozlesmeEklendi }) => {
     sozlesme_no: '',
     sozlesme_tarihi: '',
     taksit_sayisi: '',
-    aylik_tutar: '',
+    taksit_tutari: '',
     vade_araligi: ''
   });
   const [yukleniyor, setYukleniyor] = useState(false);
@@ -34,7 +34,7 @@ const SozlesmeForm = ({ onSozlesmeEklendi }) => {
       // Form validasyonu
       if (!formData.isim || !formData.soyisim || !formData.sozlesme_no ||
           !formData.sozlesme_tarihi || !formData.taksit_sayisi ||
-          !formData.aylik_tutar || !formData.vade_araligi) {
+          !formData.taksit_tutari || !formData.vade_araligi) {
         throw new Error('Lütfen tüm alanları doldurun');
       }
 
@@ -49,7 +49,7 @@ const SozlesmeForm = ({ onSozlesmeEklendi }) => {
         sozlesme_no: formData.sozlesme_no,
         sozlesme_tarihi: timestamp,
         taksit_sayisi: Number(formData.taksit_sayisi),
-        aylik_tutar: Number(formData.aylik_tutar),
+        taksit_tutari: Number(formData.taksit_tutari),
         vade_araligi: Number(formData.vade_araligi),
         olusturma_tarihi: Timestamp.now()
       });
@@ -61,7 +61,7 @@ const SozlesmeForm = ({ onSozlesmeEklendi }) => {
         sozlesme_no: '',
         sozlesme_tarihi: '',
         taksit_sayisi: '',
-        aylik_tutar: '',
+        taksit_tutari: '',
         vade_araligi: ''
       });
 
@@ -176,16 +176,16 @@ const SozlesmeForm = ({ onSozlesmeEklendi }) => {
               />
             </div>
 
-            {/* Aylık Tutar */}
+            {/* Taksit Tutar */}
             <div>
-              <label htmlFor="aylik_tutar" className="block text-sm font-medium text-gray-700 mb-2">
-                Aylık Tutar (₺) *
+              <label htmlFor="taksit_tutari" className="block text-sm font-medium text-gray-700 mb-2">
+                Taksit Tutarı (₺) *
               </label>
               <input
                   type="number"
-                  id="aylik_tutar"
-                  name="aylik_tutar"
-                  value={formData.aylik_tutar}
+                  id="taksit_tutari"
+                  name="taksit_tutari"
+                  value={formData.taksit_tutari}
                   onChange={handleChange}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
                   placeholder="Örn: 1500.00"

@@ -141,7 +141,7 @@ const SozlesmeListesi = ({ yenile }) => {
                   Vade Aralığı
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Aylık Tutar
+                  Taksit Tutar
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Toplam Tutar
@@ -183,12 +183,12 @@ const SozlesmeListesi = ({ yenile }) => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
-                      {formatPara(sozlesme.aylik_tutar)}
+                      {formatPara(sozlesme.taksit_tutari || sozlesme.taksit_tutari)}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-bold text-green-600">
-                      {formatPara(sozlesme.aylik_tutar * sozlesme.taksit_sayisi)}
+                      {formatPara((sozlesme.taksit_tutari || sozlesme.taksit_tutari) * sozlesme.taksit_sayisi)}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">

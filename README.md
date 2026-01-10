@@ -33,7 +33,7 @@
 ### 💼 İş Mantığı
 - 📅 Otomatik tarih formatlaması (Türkçe)
 - 💰 TL para birimi formatlaması
-- 🧮 Toplam tutar hesaplama (Taksit × Aylık Tutar)
+- 🧮 Toplam tutar hesaplama (Taksit Sayısı × Taksit Tutarı)
 - 🔐 Firebase Timestamp desteği
 - ✅ Hata yönetimi ve kullanıcı geri bildirimleri
 
@@ -130,7 +130,7 @@ Tarayıcınızda `http://localhost:5173` adresini açın 🎉
    - **Sözleşme Tarihi:** Date picker'dan seçin
    - **Taksit Sayısı:** Örn: `12`
    - **Vade Aralığı:** Örn: `3` (ay cinsinden)
-   - **Aylık Tutar:** Örn: `5000.00`
+   - **Taksit Tutar:** Örn: `5000.00`
 2. **"Sözleşme Ekle"** butonuna tıklayın
 3. Başarı mesajını görün ✅
 
@@ -159,7 +159,7 @@ Tarayıcınızda `http://localhost:5173` adresini açın 🎉
 Sözleşme Tarihi: 1 Ocak 2026
 Vade Aralığı: 5 gün
 Taksit Sayısı: 3
-Aylık Tutar: 1000 ₺
+Taksit Tutarı: 1000 ₺
 
 Ödeme Tarihleri:
 1. Ödeme: 6 Ocak 2026  → 1000 ₺
@@ -214,7 +214,7 @@ sozlesme-takip/
   sozlesme_tarihi: Timestamp,            // Firebase Timestamp
   taksit_sayisi: 12,                     // number
   vade_araligi: 3,                       // number (ay cinsinden)
-  aylik_tutar: 5000.00,                  // number
+  taksit_tutari: 5000.00,                  // number
   olusturma_tarihi: Timestamp            // Firebase Timestamp (otomatik)
 }
 ```
@@ -229,7 +229,7 @@ sozlesme-takip/
   "sozlesme_tarihi": "2026-01-11T00:00:00Z",
   "taksit_sayisi": 12,
   "vade_araligi": 3,
-  "aylik_tutar": 5000,
+  "taksit_tutari": 5000,
   "olusturma_tarihi": "2026-01-11T10:30:00Z"
 }
 ```
@@ -316,7 +316,7 @@ module.exports = {
 />
 ```
 
-**Not:** Mevcut formda isim, soyisim, sözleşme no, tarih, taksit sayısı ve aylık tutar alanları bulunmaktadır.
+**Not:** Mevcut formda isim, soyisim, sözleşme no, tarih, taksit sayısı ve Taksit Tutar alanları bulunmaktadır.
 
 ---
 

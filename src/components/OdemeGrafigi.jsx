@@ -30,7 +30,7 @@ const OdemeGrafigi = ({ yenile }) => {
         let odemeTarihi = sozlesme.sozlesme_tarihi.toDate();
         const vadeAraligi = parseInt(sozlesme.vade_araligi);
         const taksitSayisi = parseInt(sozlesme.taksit_sayisi);
-        const aylikTutar = parseFloat(sozlesme.aylik_tutar);
+        const taksitTutari = parseFloat(sozlesme.taksit_tutari || sozlesme.taksit_tutari);
 
         for (let i = 0; i < taksitSayisi; i++) {
           odemeTarihi = new Date(odemeTarihi);
@@ -53,7 +53,7 @@ const OdemeGrafigi = ({ yenile }) => {
             };
           }
 
-          aylikOdemeler[ayAnahtari].tutar += aylikTutar;
+          aylikOdemeler[ayAnahtari].tutar += taksitTutari;
           aylikOdemeler[ayAnahtari].adet += 1;
         }
       } catch (error) {
