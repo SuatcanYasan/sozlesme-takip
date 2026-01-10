@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import SozlesmeForm from './components/SozlesmeForm';
 import SozlesmeListesi from './components/SozlesmeListesi';
+import OdemeGrafigi from "./components/OdemeGrafigi";
 
 function App() {
   const [yenilemeAnahtari, setYenilemeAnahtari] = useState(0);
@@ -32,7 +33,10 @@ function App() {
       {/* Main Content */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <SozlesmeForm onSozlesmeEklendi={handleSozlesmeEklendi} />
-        <SozlesmeListesi yenile={yenilemeAnahtari} />
+        <div className="my-4">
+          <SozlesmeListesi yenile={yenilemeAnahtari} />
+        </div>
+        <OdemeGrafigi yenile={yenilemeAnahtari} />
       </main>
 
       <footer className="mt-12 bg-white border-t border-gray-200">

@@ -147,6 +147,33 @@ Tarayıcınızda `http://localhost:5173` adresini açın 🎉
 2. Onay dialogunda **"Tamam"** seçin
 3. Sözleşme listeden kaldırılır 🗑️
 
+### Gelir Projeksiyonu Grafiği 📈
+
+**Ödeme Tarihi Hesaplama Mantığı:**
+- **İlk Ödeme:** Sözleşme Tarihi + Vade Aralığı
+- **Sonraki Ödemeler:** Bir önceki ödeme + Vade Aralığı
+- **Tekrar Sayısı:** Taksit Sayısı
+
+**Örnek Hesaplama:**
+```
+Sözleşme Tarihi: 1 Ocak 2026
+Vade Aralığı: 5 gün
+Taksit Sayısı: 3
+Aylık Tutar: 1000 ₺
+
+Ödeme Tarihleri:
+1. Ödeme: 6 Ocak 2026  → 1000 ₺
+2. Ödeme: 11 Ocak 2026 → 1000 ₺
+3. Ödeme: 16 Ocak 2026 → 1000 ₺
+```
+
+**Grafik Özellikleri:**
+- 📊 Aylara göre gruplandırılmış gelir grafiği
+- 💰 Her ay için toplam gelir ve ödeme sayısı
+- 📈 İnteraktif bar chart (hover ile detaylar)
+- 📋 Tablo formatında detaylı görünüm
+- 🧮 Aylık ortalama ve toplam istatistikler
+
 ---
 
 ## 📁 Proje Yapısı
