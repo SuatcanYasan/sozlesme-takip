@@ -372,9 +372,9 @@ Katkılarınızı bekliyoruz! Lütfen aşağıdaki adımları izleyin:
 
 Sorularınız veya önerileriniz için:
 
-- 📧 Email: your.email@example.com
-- 🐛 Issue: [GitHub Issues](https://github.com/yourusername/sozlesme-takip/issues)
-- 💬 Discussions: [GitHub Discussions](https://github.com/yourusername/sozlesme-takip/discussions)
+- 📧 Email: suatcanysn@gmail.com
+- 🐛 Issue: [GitHub Issues](https://github.com/SuatcanYasan/sozlesme-takip/issues)
+- 💬 Discussions: [GitHub Discussions](https://github.com/SuatcanYasan/sozlesme-takip/discussions)
 
 ---
 

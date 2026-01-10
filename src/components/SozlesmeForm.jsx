@@ -214,21 +214,18 @@ const SozlesmeForm = ({ onSozlesmeEklendi }) => {
             </div>
           </div>
 
-          {/* Hata Mesajı */}
           {hata && (
               <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
                 {hata}
               </div>
           )}
 
-          {/* Başarı Mesajı */}
           {basari && (
               <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
                 ✓ Sözleşme başarıyla eklendi!
               </div>
           )}
 
-          {/* Submit Button */}
           <button
               type="submit"
               disabled={yukleniyor}
