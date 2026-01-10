@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, deleteDoc, doc, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, deleteDoc, doc, query, orderBy, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 
 const SozlesmeListesi = ({ yenile }) => {
@@ -75,6 +75,23 @@ const SozlesmeListesi = ({ yenile }) => {
     }
   };
 
+  // Durum değiştir
+  const statusDegistir = async (id, mevcutStatus) => {
+    try {
+      const yeniStatus = mevcutStatus === 1 ? 0 : 1;
+      await updateDoc(doc(db, 'sozlesmeler', id), {
+        status: yeniStatus
+      });
+
+      setSozlesmeler(prev => prev.map(s =>
+        s.id === id ? { ...s, status: yeniStatus } : s
+      ));
+    } catch (error) {
+      console.error('Status güncellenirken hata:', error);
+      alert('Status güncellenirken bir hata oluştu');
+    }
+  };
+
   // Component yüklendiğinde ve yenile değiştiğinde sözleşmeleri yükle
   useEffect(() => {
     sozlesmeleriYukle();
@@ -141,10 +158,13 @@ const SozlesmeListesi = ({ yenile }) => {
                   Vade Aralığı
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Taksit Tutar
+                  Taksit Tutarı
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Toplam Tutar
+                </th>
+                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Durum
                 </th>
                 <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                   İşlemler
@@ -183,13 +203,40 @@ const SozlesmeListesi = ({ yenile }) => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
-                      {formatPara(sozlesme.taksit_tutari || sozlesme.taksit_tutari)}
+                      {formatPara(sozlesme.taksit_tutari || sozlesme.aylik_tutar)}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-bold text-green-600">
-                      {formatPara((sozlesme.taksit_tutari || sozlesme.taksit_tutari) * sozlesme.taksit_sayisi)}
+                      {formatPara((sozlesme.taksit_tutari || sozlesme.aylik_tutar) * sozlesme.taksit_sayisi)}
                     </div>
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-center">
+
+                    <button
+                      onClick={() => statusDegistir(sozlesme.id, sozlesme.status ?? 1)}
+                      className={`inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full transition duration-200 ${
+                        (sozlesme.status ?? 1) === 1
+                          ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                      }`}
+                    >
+                      {(sozlesme.status ?? 1) === 1 ? (
+                        <>
+                          <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                          Aktif
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                          </svg>
+                          Kapalı
+                        </>
+                      )}
+                    </button>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button

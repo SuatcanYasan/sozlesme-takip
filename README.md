@@ -22,7 +22,8 @@
 - 📊 **Listele & Görüntüle** - Tablo formatında tüm sözleşmeleri görüntüleme
 - 🗑️ **Güvenli Silme** - Onay dialogu ile sözleşme silme
 - 🔄 **Gerçek Zamanlı Senkronizasyon** - Firebase Firestore entegrasyonu
-
+- 📈 **Gelir Projeksiyonu** - Aylık gelir grafiği ve ödeme takvimi
+- 🔘 **Durum Yönetimi** - Sözleşmeleri aktif/kapalı olarak işaretleme
 ### 🎨 Kullanıcı Arayüzü
 - ✨ Modern ve profesyonel tasarım (Tailwind CSS)
 - 📱 Tam responsive (Mobile-first yaklaşım)
@@ -230,6 +231,7 @@ sozlesme-takip/
   "taksit_sayisi": 12,
   "vade_araligi": 3,
   "taksit_tutari": 5000,
+  "status": 1,
   "olusturma_tarihi": "2026-01-11T10:30:00Z"
 }
 ```

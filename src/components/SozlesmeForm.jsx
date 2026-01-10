@@ -51,6 +51,7 @@ const SozlesmeForm = ({ onSozlesmeEklendi }) => {
         taksit_sayisi: Number(formData.taksit_sayisi),
         taksit_tutari: Number(formData.taksit_tutari),
         vade_araligi: Number(formData.vade_araligi),
+        status: 1,
         olusturma_tarihi: Timestamp.now()
       });
 
