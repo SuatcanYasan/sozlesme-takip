@@ -156,19 +156,19 @@ const OdemeGrafigi = ({ yenile }) => {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <div className="mb-6">
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div className="px-4 md:px-6 py-3.5 bg-gray-50 border-b border-gray-200">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-base md:text-[16px] font-bold text-gray-800">
+            <h2 className="text-[14px] font-semibold text-gray-700">
               Aylık Gelir Projeksiyonu
             </h2>
-            <p className="text-gray-600 mt-1">
+            <p className="text-xs text-gray-500 mt-0.5">
               Sözleşme ödemelerine göre aylık gelir tahmini
             </p>
           </div>
           <div className="text-right">
-            <p className="text-sm md:text-[14px] text-gray-600">Toplam Beklenen Gelir</p>
+            <p className="text-xs text-gray-500">Toplam Beklenen Gelir</p>
             <p className="text-lg md:text-[18px] font-bold text-green-600 font-number">
               {formatPara(toplamGelir)}
             </p>
@@ -176,8 +176,9 @@ const OdemeGrafigi = ({ yenile }) => {
         </div>
       </div>
 
-      <div className="mb-4">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="p-4 md:p-6">
+        <div className="mb-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-blue-50 p-4 rounded-lg">
             <p className="text-sm md:text-[14px] text-gray-600">Toplam Ödeme Dönemi</p>
             <p className="text-base md:text-[18px] font-bold text-blue-600 font-number">{grafikVerisi.length} Ay</p>
@@ -260,6 +261,7 @@ const OdemeGrafigi = ({ yenile }) => {
             ))}
           </tbody>
         </table>
+      </div>
       </div>
     </div>
   );

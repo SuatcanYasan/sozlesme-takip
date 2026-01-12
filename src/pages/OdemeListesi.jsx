@@ -146,21 +146,22 @@ const OdemeListesi = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-base md:text-[16px] font-bold text-gray-800">Ödeme Geçmişi</h2>
-          <p className="text-sm md:text-[14px] text-gray-600 mt-1">Tüm ödemeler kronolojik sırada</p>
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className="px-4 md:px-6 py-3.5 bg-gray-50 border-b border-gray-200">
+          <h2 className="text-[14px] font-semibold text-gray-700">Ödeme Geçmişi</h2>
+          <p className="text-xs text-gray-500 mt-0.5">Tüm ödemeler kronolojik sırada</p>
         </div>
 
-        {odemeler.length === 0 ? (
-          <div className="px-6 py-12 text-center">
-            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-            </svg>
-            <p className="mt-4 text-gray-600">Henüz ödeme kaydı yok</p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
+        <div className="bg-white">
+          {odemeler.length === 0 ? (
+            <div className="px-6 py-12 text-center">
+              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              <p className="mt-4 text-gray-600">Henüz ödeme kaydı yok</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
@@ -241,7 +242,8 @@ const OdemeListesi = () => {
               </tbody>
             </table>
           </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

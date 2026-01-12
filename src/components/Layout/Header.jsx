@@ -5,12 +5,12 @@ const Header = () => {
   const location = useLocation();
 
   const pageNames = {
-    '/dashboard': 'Dashboard',
+    '/dashboard': 'Anasayfa',
     '/odeme-listesi': 'Ödeme Listesi',
     '/gider-listesi': 'Gider Listesi'
   };
 
-  const currentPageName = pageNames[location.pathname] || 'Dashboard';
+  const currentPageName = pageNames[location.pathname] || 'Anasayfa';
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-40">

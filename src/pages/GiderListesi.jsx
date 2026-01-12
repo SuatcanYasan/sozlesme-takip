@@ -47,13 +47,13 @@ const GiderListesi = () => {
         </div>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-base md:text-[16px] font-bold text-gray-800">Gider Listesi</h2>
-          <p className="text-sm md:text-[14px] text-gray-600 mt-1">Tüm giderler ve harcamalar</p>
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className="px-4 md:px-6 py-3.5 bg-gray-50 border-b border-gray-200">
+          <h2 className="text-[14px] font-semibold text-gray-700">Gider Listesi</h2>
+          <p className="text-xs text-gray-500 mt-0.5">Tüm giderler ve harcamalar</p>
         </div>
 
-        <div className="px-6 py-12 text-center">
+        <div className="bg-white px-6 py-12 text-center">
           <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
           </svg>
