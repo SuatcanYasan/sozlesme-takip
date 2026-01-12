@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { collection, getDocs, deleteDoc, doc, query, orderBy, updateDoc } from 'firebase/firestore';
+import { collection, getDocs, deleteDoc, doc, query, orderBy, updateDoc, addDoc, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 
 const SozlesmeListesi = ({ yenile }) => {
@@ -17,6 +17,10 @@ const SozlesmeListesi = ({ yenile }) => {
   const [modalAcik, setModalAcik] = useState(false);
   const [duzenlenenTaksit, setDuzenlenenTaksit] = useState(null);
   const [geciciTutar, setGeciciTutar] = useState('');
+  const [odemeModalAcik, setOdemeModalAcik] = useState(false);
+  const [odemeYapilacakTaksit, setOdemeYapilacakTaksit] = useState(null);
+  const [odemeTutari, setOdemeTutari] = useState('');
+  const [odemeTarihi, setOdemeTarihi] = useState('');
 
   // Tarihi formatla
   const formatTarih = (timestamp) => {
@@ -286,6 +290,92 @@ const SozlesmeListesi = ({ yenile }) => {
     await taksitTutariGuncelle(taksitId, geciciTutar, sozlesmeNo);
     setDuzenlenenTaksit(null);
     setGeciciTutar('');
+  };
+
+  const odemeModalAc = (taksit) => {
+    setOdemeYapilacakTaksit(taksit);
+    setOdemeTutari('');
+    const bugun = new Date().toISOString().split('T')[0];
+    setOdemeTarihi(bugun);
+    setOdemeModalAcik(true);
+  };
+
+  const odemeModalKapat = () => {
+    setOdemeModalAcik(false);
+    setOdemeYapilacakTaksit(null);
+    setOdemeTutari('');
+    setOdemeTarihi('');
+  };
+
+  const odemeKaydet = async () => {
+    if (!odemeYapilacakTaksit || !odemeTutari || !odemeTarihi) {
+      alert('Lütfen tüm alanları doldurun');
+      return;
+    }
+
+    try {
+      const odemeTutariSayi = parseFloat(odemeTutari);
+
+      if (isNaN(odemeTutariSayi) || odemeTutariSayi <= 0) {
+        alert('Lütfen geçerli bir tutar girin');
+        return;
+      }
+
+      const mevcutOdenen = odemeYapilacakTaksit.odenen_tutar || 0;
+      const kalanTutar = odemeYapilacakTaksit.kalan_tutar || odemeYapilacakTaksit.taksit_tutari;
+
+      if (odemeTutariSayi > kalanTutar) {
+        alert(`Ödeme tutarı kalan tutardan (${formatPara(kalanTutar)}) fazla olamaz`);
+        return;
+      }
+
+      const yeniOdenenTutar = mevcutOdenen + odemeTutariSayi;
+      const yeniKalanTutar = kalanTutar - odemeTutariSayi;
+
+      await updateDoc(doc(db, 'sozlesmeler', odemeYapilacakTaksit.id), {
+        odenen_tutar: yeniOdenenTutar,
+        kalan_tutar: yeniKalanTutar
+      });
+
+      const odemeKaydi = {
+        isim: odemeYapilacakTaksit.isim,
+        soyisim: odemeYapilacakTaksit.soyisim,
+        sozlesme_no: odemeYapilacakTaksit.sozlesme_no,
+        taksit_sira: odemeYapilacakTaksit.taksit_sira,
+        odeme_tutari: odemeTutariSayi,
+        odeme_tarihi: Timestamp.fromDate(new Date(odemeTarihi)),
+        olusturma_tarihi: Timestamp.now()
+      };
+
+      await addDoc(collection(db, 'odemeler'), odemeKaydi);
+
+      setTaksitler(prev => prev.map(t =>
+        t.id === odemeYapilacakTaksit.id
+          ? { ...t, odenen_tutar: yeniOdenenTutar, kalan_tutar: yeniKalanTutar }
+          : t
+      ));
+
+      if (seciliSozlesme && seciliSozlesme.sozlesme_no === odemeYapilacakTaksit.sozlesme_no) {
+        const guncelTaksitler = taksitler.map(t =>
+          t.id === odemeYapilacakTaksit.id
+            ? { ...t, odenen_tutar: yeniOdenenTutar, kalan_tutar: yeniKalanTutar }
+            : t
+        );
+
+        const sozlesmeninTaksitleri = guncelTaksitler.filter(t => t.sozlesme_no === odemeYapilacakTaksit.sozlesme_no);
+
+        setSeciliSozlesme(prev => ({
+          ...prev,
+          taksitler: sozlesmeninTaksitleri
+        }));
+      }
+
+      alert('Ödeme başarıyla kaydedildi!');
+      odemeModalKapat();
+    } catch (error) {
+      console.error('Ödeme kaydedilirken hata:', error);
+      alert('Ödeme kaydedilirken bir hata oluştu');
+    }
   };
 
   // Component yüklendiğinde ve yenile değiştiğinde verileri yükle
@@ -733,15 +823,29 @@ const SozlesmeListesi = ({ yenile }) => {
                             </button>
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-center">
-                            <button
-                              onClick={() => taksitSil(taksit.id, taksit.sozlesme_no, taksit.taksit_sira)}
-                              className="inline-flex items-center px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded transition duration-200"
-                            >
-                              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
-                              Sil
-                            </button>
+                            <div className="flex items-center justify-center gap-2">
+                              <button
+                                onClick={() => odemeModalAc(taksit)}
+                                disabled={(taksit.kalan_tutar || taksit.taksit_tutari) <= 0}
+                                className="inline-flex items-center px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                                title="Ödeme Yap"
+                              >
+                                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+                                </svg>
+                                Ödeme
+                              </button>
+                              <button
+                                onClick={() => taksitSil(taksit.id, taksit.sozlesme_no, taksit.taksit_sira)}
+                                className="inline-flex items-center px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded transition duration-200"
+                                title="Sil"
+                              >
+                                <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                </svg>
+                                Sil
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       ))}
@@ -757,6 +861,102 @@ const SozlesmeListesi = ({ yenile }) => {
                 className="w-full md:w-auto px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition duration-200"
               >
                 Kapat
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {odemeModalAcik && odemeYapilacakTaksit && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800">Ödeme Yap</h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {odemeYapilacakTaksit.isim} {odemeYapilacakTaksit.soyisim} - {odemeYapilacakTaksit.sozlesme_no}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Taksit {odemeYapilacakTaksit.taksit_sira}/{odemeYapilacakTaksit.toplam_taksit}
+                  </p>
+                </div>
+                <button
+                  onClick={odemeModalKapat}
+                  className="p-2 hover:bg-gray-200 rounded-full transition"
+                >
+                  <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="px-6 py-4">
+              <div className="mb-4 p-4 bg-blue-50 rounded-lg">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <p className="text-gray-600">Taksit Tutarı:</p>
+                    <p className="font-bold text-gray-900">{formatPara(odemeYapilacakTaksit.taksit_tutari)}</p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600">Ödenen:</p>
+                    <p className="font-bold text-green-600">{formatPara(odemeYapilacakTaksit.odenen_tutar || 0)}</p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-gray-600">Kalan Tutar:</p>
+                    <p className="font-bold text-orange-600 text-lg">
+                      {formatPara(odemeYapilacakTaksit.kalan_tutar || odemeYapilacakTaksit.taksit_tutari)}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label htmlFor="odemeTutari" className="block text-sm font-medium text-gray-700 mb-2">
+                    Ödeme Tutarı (₺) *
+                  </label>
+                  <input
+                    type="number"
+                    id="odemeTutari"
+                    value={odemeTutari}
+                    onChange={(e) => setOdemeTutari(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+                    placeholder="Örn: 500"
+                    step="0.01"
+                    min="0"
+                    max={odemeYapilacakTaksit.kalan_tutar || odemeYapilacakTaksit.taksit_tutari}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="odemeTarihi" className="block text-sm font-medium text-gray-700 mb-2">
+                    Ödeme Tarihi *
+                  </label>
+                  <input
+                    type="date"
+                    id="odemeTarihi"
+                    value={odemeTarihi}
+                    onChange={(e) => setOdemeTarihi(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex gap-3">
+              <button
+                onClick={odemeModalKapat}
+                className="flex-1 px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition duration-200"
+              >
+                İptal
+              </button>
+              <button
+                onClick={odemeKaydet}
+                className="flex-1 px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg transition duration-200"
+              >
+                Ödemeyi Kaydet
               </button>
             </div>
           </div>
