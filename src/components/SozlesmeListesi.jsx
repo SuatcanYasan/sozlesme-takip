@@ -521,6 +521,9 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
                     İsim Soyisim
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Telefon Numarası
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Sözleşme No
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -540,6 +543,13 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
                       placeholder="İsim/Soyisim Ara..."
                       value={aramalar.isim_soyisim}
                       onChange={(e) => aramaDegistir('isim_soyisim', e.target.value)}
+                      className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent outline-none"
+                    />
+                  </th>
+                  <th className="px-2 py-2">
+                    <input
+                      type="text"
+                      placeholder="Telefon Ara..."
                       className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent outline-none"
                     />
                   </th>
@@ -574,6 +584,11 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
                         {sozlesme.isim} {sozlesme.soyisim}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-700">
+                        {sozlesme.gsm || '-'}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
