@@ -1,11 +1,16 @@
 import React from 'react';
+import { useLocation } from 'react-router-dom';
 
-const Header = ({ currentPage }) => {
+const Header = () => {
+  const location = useLocation();
+
   const pageNames = {
-    'dashboard': 'Dashboard',
-    'odeme-listesi': 'Ödeme Listesi',
-    'gider-listesi': 'Gider Listesi'
+    '/dashboard': 'Dashboard',
+    '/odeme-listesi': 'Ödeme Listesi',
+    '/gider-listesi': 'Gider Listesi'
   };
+
+  const currentPageName = pageNames[location.pathname] || 'Dashboard';
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">
@@ -13,7 +18,7 @@ const Header = ({ currentPage }) => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">
-              {pageNames[currentPage] || 'Dashboard'}
+              {currentPageName}
             </h1>
             <p className="text-sm text-gray-600 mt-1">
               {new Date().toLocaleDateString('tr-TR', {
