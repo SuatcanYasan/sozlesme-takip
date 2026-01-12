@@ -17,36 +17,46 @@ const Sidebar = () => {
     return () => window.removeEventListener('resize', checkDesktop);
   }, []);
 
-  const menuItems = [
+  const menuGroups = [
     {
-      id: 'dashboard',
-      path: '/dashboard',
-      label: 'Dashboard',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-        </svg>
-      )
+      title: 'Dashboard',
+      items: [
+        {
+          id: 'dashboard',
+          path: '/dashboard',
+          label: 'Dashboard',
+          icon: (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+            </svg>
+          )
+        }
+      ]
     },
     {
-      id: 'odeme-listesi',
-      path: '/odeme-listesi',
-      label: 'Ödeme Listesi',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
-        </svg>
-      )
-    },
-    {
-      id: 'gider-listesi',
-      path: '/gider-listesi',
-      label: 'Gider Listesi',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-        </svg>
-      )
+      title: 'Pages',
+      items: [
+        {
+          id: 'odeme-listesi',
+          path: '/odeme-listesi',
+          label: 'Ödeme Listesi',
+          icon: (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+          )
+        },
+        {
+          id: 'gider-listesi',
+          path: '/gider-listesi',
+          label: 'Gider Listesi',
+          icon: (
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+            </svg>
+          )
+        }
+      ]
     }
   ];
 
@@ -82,27 +92,38 @@ const Sidebar = () => {
         </div>
       </div>
 
-      <nav className="flex-1 p-4">
-        <ul className="space-y-2">
-          {menuItems.map((item) => (
-            <li key={item.id}>
-              <NavLink
-                to={item.path}
-                className={({ isActive }) =>
-                  `flex items-center ${isExpanded ? 'space-x-3' : 'justify-center'} px-4 py-2 rounded-lg transition duration-200 ${
-                    isActive
-                      ? 'bg-blue-600 text-white'
-                      : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                  }`
-                }
-                title={!isExpanded ? item.label : ''}
-              >
-                {item.icon}
-                {isExpanded && <span className="font-medium text-[14px]">{item.label}</span>}
-              </NavLink>
-            </li>
+      <nav className="flex-1 p-4 overflow-y-auto">
+        <div className="space-y-6">
+          {menuGroups.map((group, groupIndex) => (
+            <div key={groupIndex}>
+              {isExpanded && (
+                <h3 className="px-3 mb-2 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                  {group.title}
+                </h3>
+              )}
+              <ul className="space-y-1">
+                {group.items.map((item) => (
+                  <li key={item.id}>
+                    <NavLink
+                      to={item.path}
+                      className={({ isActive }) =>
+                        `flex items-center ${isExpanded ? 'space-x-3' : 'justify-center'} px-3 py-2 rounded-lg transition duration-200 ${
+                          isActive
+                            ? 'bg-blue-600 text-white'
+                            : 'text-gray-300 hover:bg-gray-800 hover:text-white'
+                        }`
+                      }
+                      title={!isExpanded ? item.label : ''}
+                    >
+                      {item.icon}
+                      {isExpanded && <span className="font-medium text-[14px]">{item.label}</span>}
+                    </NavLink>
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
-        </ul>
+        </div>
       </nav>
 
       <div className={`p-3 border-t border-gray-800 ${isExpanded ? '' : 'text-center'}`}>
