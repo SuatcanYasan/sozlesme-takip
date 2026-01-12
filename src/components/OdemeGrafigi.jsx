@@ -160,7 +160,7 @@ const OdemeGrafigi = ({ yenile }) => {
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-bold text-gray-800">
+            <h2 className="text-base md:text-[16px] font-bold text-gray-800">
               Aylık Gelir Projeksiyonu
             </h2>
             <p className="text-gray-600 mt-1">
@@ -168,8 +168,8 @@ const OdemeGrafigi = ({ yenile }) => {
             </p>
           </div>
           <div className="text-right">
-            <p className="text-sm text-gray-600">Toplam Beklenen Gelir</p>
-            <p className="text-xl md:text-2xl font-bold text-green-600 font-number">
+            <p className="text-sm md:text-[14px] text-gray-600">Toplam Beklenen Gelir</p>
+            <p className="text-lg md:text-[18px] font-bold text-green-600 font-number">
               {formatPara(toplamGelir)}
             </p>
           </div>
@@ -179,18 +179,18 @@ const OdemeGrafigi = ({ yenile }) => {
       <div className="mb-4">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-blue-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-600">Toplam Ödeme Dönemi</p>
-            <p className="text-lg font-bold text-blue-600 font-number">{grafikVerisi.length} Ay</p>
+            <p className="text-sm md:text-[14px] text-gray-600">Toplam Ödeme Dönemi</p>
+            <p className="text-base md:text-[18px] font-bold text-blue-600 font-number">{grafikVerisi.length} Ay</p>
           </div>
           <div className="bg-green-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-600">Aylık Ortalama</p>
-            <p className="text-lg font-bold text-green-600 font-number">
+            <p className="text-sm md:text-[14px] text-gray-600">Aylık Ortalama</p>
+            <p className="text-base md:text-[18px] font-bold text-green-600 font-number">
               {formatPara(toplamGelir / grafikVerisi.length)}
             </p>
           </div>
           <div className="bg-purple-50 p-4 rounded-lg">
-            <p className="text-sm text-gray-600">Toplam Ödeme Sayısı</p>
-            <p className="text-lg font-bold text-purple-600 font-number">
+            <p className="text-sm md:text-[14px] text-gray-600">Toplam Ödeme Sayısı</p>
+            <p className="text-base md:text-[18px] font-bold text-purple-600 font-number">
               {grafikVerisi.reduce((sum, item) => sum + item.adet, 0)} Adet
             </p>
           </div>

@@ -397,7 +397,7 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi }) => {
         <div className="px-4 md:px-6 py-4 border-b border-gray-200">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
-              <h2 className="text-lg md:text-xl font-bold text-gray-800">
+              <h2 className="text-base md:text-[16px] font-bold text-gray-800">
                 Sözleşme Listesi
               </h2>
               <p className="text-sm md:text-base text-gray-600 mt-1">
@@ -638,7 +638,7 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi }) => {
             <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-bold text-gray-800">
+                  <h3 className="text-base md:text-[16px] font-bold text-gray-800">
                     {seciliSozlesme.isim} {seciliSozlesme.soyisim}
                   </h3>
                   <p className="text-sm text-gray-600 mt-1">
@@ -660,39 +660,39 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi }) => {
             <div className="px-6 py-4 overflow-y-auto max-h-[calc(90vh-140px)]">
               <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
                 <div className="bg-blue-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600">Sözleşme Tarihi</p>
-                  <p className="text-lg font-bold text-blue-600">
+                  <p className="text-sm md:text-[14px] text-gray-600">Sözleşme Tarihi</p>
+                  <p className="text-base md:text-[18px] font-bold text-blue-600">
                     {formatTarih(seciliSozlesme.sozlesme_tarihi)}
                   </p>
                 </div>
                 <div className="bg-green-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600">Vade Başlangıç</p>
-                  <p className="text-lg font-bold text-green-600">
+                  <p className="text-sm md:text-[14px] text-gray-600">Vade Başlangıç</p>
+                  <p className="text-base md:text-[18px] font-bold text-green-600">
                     {formatTarih(seciliSozlesme.vade_baslangic_tarihi)}
                   </p>
                 </div>
                 <div className="bg-purple-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600">Toplam Tutar</p>
-                  <p className="text-lg font-bold text-purple-600">
+                  <p className="text-sm md:text-[14px] text-gray-600">Toplam Tutar</p>
+                  <p className="text-base md:text-[18px] font-bold text-purple-600">
                     {formatPara(seciliSozlesme.toplam_tutar)}
                   </p>
                 </div>
                 <div className="bg-green-100 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600">Toplam Ödenen</p>
-                  <p className="text-lg font-bold text-green-700">
+                  <p className="text-sm md:text-[14px] text-gray-600">Toplam Ödenen</p>
+                  <p className="text-base md:text-[18px] font-bold text-green-700">
                     {formatPara(seciliSozlesme.taksitler.reduce((sum, t) => sum + (t.odenen_tutar || 0), 0))}
                   </p>
                 </div>
                 <div className="bg-orange-50 p-4 rounded-lg">
-                  <p className="text-sm text-gray-600">Toplam Kalan</p>
-                  <p className="text-lg font-bold text-orange-600">
+                  <p className="text-sm md:text-[14px] text-gray-600">Toplam Kalan</p>
+                  <p className="text-base md:text-[18px] font-bold text-orange-600">
                     {formatPara(seciliSozlesme.taksitler.reduce((sum, t) => sum + (t.kalan_tutar || t.taksit_tutari), 0))}
                   </p>
                 </div>
               </div>
 
               <div>
-                <h4 className="text-lg font-bold text-gray-800 mb-4">
+                <h4 className="text-sm md:text-[14px] font-bold text-gray-800 mb-4">
                   Taksit Detayları ({seciliSozlesme.taksitler.length} Adet)
                 </h4>
                 <div className="overflow-x-auto">
@@ -872,7 +872,7 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi }) => {
             <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-lg font-bold text-gray-800">Ödeme Yap</h3>
+                  <h3 className="text-base md:text-[16px] font-bold text-gray-800">Ödeme Yap</h3>
                   <p className="text-sm text-gray-600 mt-1">
                     {odemeYapilacakTaksit.isim} {odemeYapilacakTaksit.soyisim} - {odemeYapilacakTaksit.sozlesme_no}
                   </p>
@@ -904,7 +904,7 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi }) => {
                   </div>
                   <div className="col-span-2">
                     <p className="text-gray-600">Kalan Tutar:</p>
-                    <p className="font-bold text-orange-600 text-lg">
+                    <p className="font-bold text-orange-600 text-base md:text-[18px]">
                       {formatPara(odemeYapilacakTaksit.kalan_tutar || odemeYapilacakTaksit.taksit_tutari)}
                     </p>
                   </div>
@@ -968,7 +968,7 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi }) => {
           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-bold text-gray-800">Yeni Sözleşme Ekle</h3>
+                <h3 className="text-base md:text-[16px] font-bold text-gray-800">Yeni Sözleşme Ekle</h3>
                 <button
                   onClick={() => setFormModalAcik(false)}
                   className="p-2 hover:bg-gray-200 rounded-full transition"

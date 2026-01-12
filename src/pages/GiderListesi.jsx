@@ -49,8 +49,8 @@ const GiderListesi = () => {
 
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-bold text-gray-800">Gider Listesi</h2>
-          <p className="text-sm text-gray-600 mt-1">Tüm giderler ve harcamalar</p>
+          <h2 className="text-base md:text-[16px] font-bold text-gray-800">Gider Listesi</h2>
+          <p className="text-sm md:text-[14px] text-gray-600 mt-1">Tüm giderler ve harcamalar</p>
         </div>
 
         <div className="px-6 py-12 text-center">

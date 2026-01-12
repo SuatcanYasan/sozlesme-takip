@@ -148,8 +148,8 @@ const OdemeListesi = () => {
 
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-lg font-bold text-gray-800">Ödeme Geçmişi</h2>
-          <p className="text-sm text-gray-600 mt-1">Tüm ödemeler kronolojik sırada</p>
+          <h2 className="text-base md:text-[16px] font-bold text-gray-800">Ödeme Geçmişi</h2>
+          <p className="text-sm md:text-[14px] text-gray-600 mt-1">Tüm ödemeler kronolojik sırada</p>
         </div>
 
         {odemeler.length === 0 ? (

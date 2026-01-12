@@ -62,7 +62,7 @@ const Sidebar = () => {
             </svg>
             {isExpanded && (
               <div className="ml-3">
-                <h2 className="text-lg font-bold">Sözleşme</h2>
+                <h2 className="text-base md:text-[16px] font-bold">Sözleşme</h2>
                 <p className="text-xs text-gray-400">Yönetim Paneli</p>
               </div>
             )}
@@ -89,7 +89,7 @@ const Sidebar = () => {
               <NavLink
                 to={item.path}
                 className={({ isActive }) =>
-                  `flex items-center ${isExpanded ? 'space-x-3' : 'justify-center'} px-4 py-3 rounded-lg transition duration-200 ${
+                  `flex items-center ${isExpanded ? 'space-x-3' : 'justify-center'} px-4 py-2 rounded-lg transition duration-200 ${
                     isActive
                       ? 'bg-blue-600 text-white'
                       : 'text-gray-300 hover:bg-gray-800 hover:text-white'
@@ -98,15 +98,15 @@ const Sidebar = () => {
                 title={!isExpanded ? item.label : ''}
               >
                 {item.icon}
-                {isExpanded && <span className="font-medium">{item.label}</span>}
+                {isExpanded && <span className="font-medium text-[14px]">{item.label}</span>}
               </NavLink>
             </li>
           ))}
         </ul>
       </nav>
 
-      <div className={`p-4 border-t border-gray-800 ${isExpanded ? '' : 'text-center'}`}>
-        <div className="text-xs text-gray-400">
+      <div className={`p-3 border-t border-gray-800 ${isExpanded ? '' : 'text-center'}`}>
+        <div className="text-[10px] text-gray-400">
           {isExpanded ? 'v1.0.0 - 2026' : 'v1.0'}
         </div>
       </div>
