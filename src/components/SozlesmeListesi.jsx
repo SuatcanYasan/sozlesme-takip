@@ -195,17 +195,22 @@ const SozlesmeListesi = ({ yenile }) => {
         return;
       }
 
+      const guncellenecekTaksit = taksitler.find(t => t.id === taksitId);
+      const odenenTutar = guncellenecekTaksit?.odenen_tutar || 0;
+      const yeniKalanTutar = tutarSayi - odenenTutar;
+
       await updateDoc(doc(db, 'sozlesmeler', taksitId), {
-        taksit_tutari: tutarSayi
+        taksit_tutari: tutarSayi,
+        kalan_tutar: yeniKalanTutar
       });
 
       setTaksitler(prev => prev.map(t =>
-        t.id === taksitId ? { ...t, taksit_tutari: tutarSayi } : t
+        t.id === taksitId ? { ...t, taksit_tutari: tutarSayi, kalan_tutar: yeniKalanTutar } : t
       ));
 
       if (seciliSozlesme && seciliSozlesme.sozlesme_no === sozlesmeNo) {
         const guncelTaksitler = taksitler.map(t =>
-          t.id === taksitId ? { ...t, taksit_tutari: tutarSayi } : t
+          t.id === taksitId ? { ...t, taksit_tutari: tutarSayi, kalan_tutar: yeniKalanTutar } : t
         );
 
         const sozlesmeninTaksitleri = guncelTaksitler.filter(t => t.sozlesme_no === sozlesmeNo);
@@ -218,7 +223,7 @@ const SozlesmeListesi = ({ yenile }) => {
         }));
       }
 
-      alert('Taksit tutarı başarıyla güncellendi!');
+      alert('Taksit tutarı ve kalan tutar başarıyla güncellendi!');
     } catch (error) {
       console.error('Tutar güncellenirken hata:', error);
       alert('Tutar güncellenirken bir hata oluştu');
