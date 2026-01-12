@@ -22,7 +22,6 @@ const SozlesmeListesi = ({ yenile }) => {
   const [odemeTutari, setOdemeTutari] = useState('');
   const [odemeTarihi, setOdemeTarihi] = useState('');
 
-  // Tarihi formatla
   const formatTarih = (timestamp) => {
     if (!timestamp) return '-';
     try {
@@ -38,7 +37,6 @@ const SozlesmeListesi = ({ yenile }) => {
     }
   };
 
-  // Para birimi formatla
   const formatPara = (tutar) => {
     return new Intl.NumberFormat('tr-TR', {
       style: 'currency',
@@ -46,7 +44,6 @@ const SozlesmeListesi = ({ yenile }) => {
     }).format(tutar);
   };
 
-  // Sözleşmeleri grupla
   const sozlesmeleriGrupla = () => {
     const gruplananlar = {};
 
@@ -80,7 +77,6 @@ const SozlesmeListesi = ({ yenile }) => {
     return Object.values(gruplananlar);
   };
 
-  // Arama değiştir
   const aramaDegistir = (alan, deger) => {
     setAramalar(prev => ({
       ...prev,
@@ -89,7 +85,6 @@ const SozlesmeListesi = ({ yenile }) => {
     setMevcutSayfa(1);
   };
 
-  // Aramaları temizle
   const aramalariTemizle = () => {
     setAramalar({
       isim_soyisim: '',
@@ -99,13 +94,11 @@ const SozlesmeListesi = ({ yenile }) => {
     setMevcutSayfa(1);
   };
 
-  // Filtrelenmiş veriler
   const gruplananSozlesmeler = sozlesmeleriGrupla();
   const filtrelenmisVeriler = gruplananSozlesmeler.filter(sozlesme => {
     const isimSoyisim = `${sozlesme.isim} ${sozlesme.soyisim}`.toLowerCase();
     const sozlesmeNo = sozlesme.sozlesme_no?.toLowerCase() || '';
 
-    // Status filtresi - eğer tüm taksitler aynı durumda ise
     let statusMatch = true;
     if (aramalar.status !== '') {
       const arananStatus = parseInt(aramalar.status);
@@ -119,13 +112,11 @@ const SozlesmeListesi = ({ yenile }) => {
     );
   });
 
-  // Pagination hesaplamaları
   const toplamSayfa = Math.ceil(filtrelenmisVeriler.length / sayfaBasinaKayit);
   const baslangicIndex = (mevcutSayfa - 1) * sayfaBasinaKayit;
   const bitisIndex = baslangicIndex + sayfaBasinaKayit;
   const mevcutVeriler = filtrelenmisVeriler.slice(baslangicIndex, bitisIndex);
 
-  // Taksitleri yükle
   const taksitleriYukle = async () => {
     setYukleniyor(true);
     setHata('');
@@ -151,7 +142,6 @@ const SozlesmeListesi = ({ yenile }) => {
     }
   };
 
-  // Sözleşmenin tüm taksitlerini sil
   const sozlesmeSil = async (sozlesmeNo) => {
     if (!window.confirm(`"${sozlesmeNo}" numaralı sözleşmenin tüm taksitlerini silmek istediğinize emin misiniz?`)) {
       return;
@@ -173,7 +163,6 @@ const SozlesmeListesi = ({ yenile }) => {
     }
   };
 
-  // Taksit durumunu değiştir
   const taksitStatusDegistir = async (taksitId, mevcutStatus) => {
     try {
       const yeniStatus = mevcutStatus === 1 ? 0 : 1;
@@ -234,7 +223,6 @@ const SozlesmeListesi = ({ yenile }) => {
     }
   };
 
-  // Taksit sil
   const taksitSil = async (taksitId, sozlesmeNo, taksitSira) => {
     if (!window.confirm(`"${sozlesmeNo}" sözleşmesinin ${taksitSira}. taksitini silmek istediğinize emin misiniz?`)) {
       return;
@@ -245,7 +233,6 @@ const SozlesmeListesi = ({ yenile }) => {
       setTaksitler(prev => prev.filter(t => t.id !== taksitId));
       alert('Taksit başarıyla silindi!');
 
-      // Eğer modal açıksa ve bu sözleşmeye aitse, modalı güncelle
       if (seciliSozlesme && seciliSozlesme.sozlesme_no === sozlesmeNo) {
         const kalanTaksitler = taksitler.filter(t =>
           t.sozlesme_no === sozlesmeNo && t.id !== taksitId
@@ -262,13 +249,11 @@ const SozlesmeListesi = ({ yenile }) => {
     }
   };
 
-  // Modal aç
   const detayGoster = (sozlesme) => {
     setSeciliSozlesme(sozlesme);
     setModalAcik(true);
   };
 
-  // Modal kapat
   const modalKapat = () => {
     setModalAcik(false);
     setSeciliSozlesme(null);
@@ -378,7 +363,6 @@ const SozlesmeListesi = ({ yenile }) => {
     }
   };
 
-  // Component yüklendiğinde ve yenile değiştiğinde verileri yükle
   useEffect(() => {
     taksitleriYukle();
   }, [yenile]);
