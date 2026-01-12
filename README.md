@@ -7,7 +7,7 @@
 ![Vite](https://img.shields.io/badge/Vite-5.0.8-646CFF?style=for-the-badge&logo=vite&logoColor=white)
 ![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4.0-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
 
-**Firebase Firestore ve React ile geliştirilmiş modern, responsive sözleşme yönetim sistemi**
+**Firebase Firestore ve React ile geliştirilmiş modern, responsive sözleşme ve ödeme yönetim sistemi**
 
 [Özellikler](#-özellikler) • [Kurulum](#-hızlı-başlangıç) • [Kullanım](#-kullanım) • [Yapı](#-proje-yapısı)
 
@@ -17,28 +17,39 @@
 
 ## 🚀 Özellikler
 
-### 📝 Sözleşme Yönetimi
-- ➕ **Sözleşme Ekleme** - Kolay ve hızlı form ile sözleşme girişi
-- 📊 **Listele & Görüntüle** - Tablo formatında tüm sözleşmeleri görüntüleme
-- 🗑️ **Güvenli Silme** - Onay dialogu ile sözleşme silme
-- 🔄 **Gerçek Zamanlı Senkronizasyon** - Firebase Firestore entegrasyonu
+### 🏠 Dashboard
+- 📊 **Özet İstatistikler** - Toplam sözleşme, gelir ve bekleyen ödeme kartları
+- ➕ **Hızlı Sözleşme Ekleme** - Tek sayfada tüm işlemler
 - 📈 **Gelir Projeksiyonu** - Aylık gelir grafiği ve ödeme takvimi
-- 🔘 **Durum Yönetimi** - Sözleşmeleri aktif/kapalı olarak işaretleme
-- 🔍 **Gelişmiş Arama** - Her sütun için özel arama filtreleri
-- 📄 **Pagination** - Sayfa başına 10 kayıt ile kolay navigasyon
-### 🎨 Kullanıcı Arayüzü
-- ✨ Modern ve profesyonel tasarım (Tailwind CSS)
-- 📱 Tam responsive (Mobile-first yaklaşım)
-- 🎯 Kullanıcı dostu form validasyonu
-- ⚡ Hızlı ve akıcı animasyonlar
-- 🌈 Gradient arka plan ve gölge efektleri
+- 📋 **Sözleşme Listesi** - Sözleşme numarasına göre gruplandırılmış görünüm
+
+### 📝 Sözleşme Yönetimi
+- ➕ **Taksitli Sözleşme Ekleme** - Her taksit için ayrı kayıt oluşturma
+- 🔍 **Detaylı Görünüm** - Modal ile tüm taksitleri görüntüleme
+- 💰 **Tutar Düzenleme** - Her taksit tutarını ayrı ayrı güncelleme
+- 💳 **Ödeme Yapma** - Taksit bazında kısmi veya tam ödeme
+- 🔘 **Durum Yönetimi** - Her taksiti aktif/kapalı olarak işaretleme
+- 🔍 **Gelişmiş Arama** - İsim, sözleşme no ve duruma göre filtreleme
+- 📄 **Pagination** - Sayfa başına 10 kayıt
+
+### 💸 Ödeme Yönetimi
+- 📋 **Ödeme Listesi** - Tüm ödemeleri kronolojik sırada görüntüleme
+- 📊 **Ödeme İstatistikleri** - Toplam ve ortalama ödeme tutarları
+- 🔍 **Ödeme Arama** - Müşteri, sözleşme no ve tarihe göre filtreleme
+- 💾 **Ödeme Geçmişi** - Firebase'de ayrı koleksiyonda saklama
+
+### 🎨 Modern UI/UX
+- 🎯 **Sidebar Navigasyon** - 3 sayfa arası kolay geçiş (Dashboard, Ödeme Listesi, Gider Listesi)
+- 📱 **Responsive Tasarım** - Tüm ekran boyutlarında mükemmel görünüm
+- 🌈 **Modern Layout** - Header, Sidebar, Content, Footer yapısı
+- ⚡ **Smooth Transitions** - Akıcı animasyonlar ve hover efektleri
 
 ### 💼 İş Mantığı
-- 📅 Otomatik tarih formatlaması (Türkçe)
-- 💰 TL para birimi formatlaması
-- 🧮 Toplam tutar hesaplama (Taksit Sayısı × Taksit Tutarı)
-- 🔐 Firebase Timestamp desteği
-- ✅ Hata yönetimi ve kullanıcı geri bildirimleri
+- 📅 **Vade Hesaplama** - Otomatik vade tarihi hesaplama (Başlangıç + Aralık × Sıra)
+- 💰 **Ödenen/Kalan Takibi** - Her taksit için ayrı ödeme takibi
+- 🔢 **Otomatik Hesaplamalar** - Toplam tutar, ödenen, kalan tutarlar
+- 🔐 **Firebase Entegrasyonu** - Gerçek zamanlı veri senkronizasyonu
+- ✅ **Validasyon** - Tüm formlarda kapsamlı validasyon
 
 ---
 
@@ -48,7 +59,7 @@
 |-----------|----------|----------------|
 | **React** | 18.2.0 | UI Framework |
 | **Firebase** | 10.7.1 | Backend & Database (SDK v10+ Modular) |
-| **Firestore** | - | NoSQL Veritabanı |
+| **Firestore** | - | NoSQL Veritabanı (sozlesmeler, odemeler) |
 | **Vite** | 5.0.8 | Build Tool & Dev Server |
 | **Tailwind CSS** | 3.4.0 | Utility-First CSS Framework |
 | **PostCSS** | 8.4.32 | CSS Processing |
