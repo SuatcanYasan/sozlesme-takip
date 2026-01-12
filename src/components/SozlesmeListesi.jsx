@@ -3,7 +3,7 @@ import { collection, getDocs, deleteDoc, doc, query, orderBy, updateDoc } from '
 import { db } from '../firebase';
 
 const SozlesmeListesi = ({ yenile }) => {
-  const [sozlesmeler, setSozlesmeler] = useState([]);
+  const [taksitler, setTaksitler] = useState([]);
   const [yukleniyor, setYukleniyor] = useState(true);
   const [hata, setHata] = useState('');
   const [mevcutSayfa, setMevcutSayfa] = useState(1);
@@ -11,16 +11,14 @@ const SozlesmeListesi = ({ yenile }) => {
   const [aramalar, setAramalar] = useState({
     isim_soyisim: '',
     sozlesme_no: '',
-    sozlesme_tarihi: '',
-    taksit_sayisi: '',
-    vade_araligi: '',
-    taksit_tutari: '',
     status: ''
   });
+  const [seciliSozlesme, setSeciliSozlesme] = useState(null);
+  const [modalAcik, setModalAcik] = useState(false);
 
+  // Tarihi formatla
   const formatTarih = (timestamp) => {
     if (!timestamp) return '-';
-
     try {
       const tarih = timestamp.toDate();
       return tarih.toLocaleDateString('tr-TR', {
@@ -34,6 +32,7 @@ const SozlesmeListesi = ({ yenile }) => {
     }
   };
 
+  // Para birimi formatla
   const formatPara = (tutar) => {
     return new Intl.NumberFormat('tr-TR', {
       style: 'currency',
@@ -41,6 +40,41 @@ const SozlesmeListesi = ({ yenile }) => {
     }).format(tutar);
   };
 
+  // Sözleşmeleri grupla
+  const sozlesmeleriGrupla = () => {
+    const gruplananlar = {};
+
+    taksitler.forEach(taksit => {
+      const key = taksit.sozlesme_no;
+
+      if (!gruplananlar[key]) {
+        gruplananlar[key] = {
+          sozlesme_no: taksit.sozlesme_no,
+          isim: taksit.isim,
+          soyisim: taksit.soyisim,
+          sozlesme_tarihi: taksit.sozlesme_tarihi,
+          vade_baslangic_tarihi: taksit.vade_baslangic_tarihi,
+          taksitler: [],
+          toplam_tutar: 0,
+          aktif_taksit: 0,
+          kapali_taksit: 0
+        };
+      }
+
+      gruplananlar[key].taksitler.push(taksit);
+      gruplananlar[key].toplam_tutar += taksit.taksit_tutari;
+
+      if (taksit.status === 1) {
+        gruplananlar[key].aktif_taksit++;
+      } else {
+        gruplananlar[key].kapali_taksit++;
+      }
+    });
+
+    return Object.values(gruplananlar);
+  };
+
+  // Arama değiştir
   const aramaDegistir = (alan, deger) => {
     setAramalar(prev => ({
       ...prev,
@@ -49,45 +83,44 @@ const SozlesmeListesi = ({ yenile }) => {
     setMevcutSayfa(1);
   };
 
+  // Aramaları temizle
   const aramalariTemizle = () => {
     setAramalar({
       isim_soyisim: '',
       sozlesme_no: '',
-      sozlesme_tarihi: '',
-      taksit_sayisi: '',
-      vade_araligi: '',
-      taksit_tutari: '',
       status: ''
     });
     setMevcutSayfa(1);
   };
 
-  const filtrelenmisVeriler = sozlesmeler.filter(sozlesme => {
+  // Filtrelenmiş veriler
+  const gruplananSozlesmeler = sozlesmeleriGrupla();
+  const filtrelenmisVeriler = gruplananSozlesmeler.filter(sozlesme => {
     const isimSoyisim = `${sozlesme.isim} ${sozlesme.soyisim}`.toLowerCase();
     const sozlesmeNo = sozlesme.sozlesme_no?.toLowerCase() || '';
-    const vadeTarihi = formatTarih(sozlesme.vade_tarihi).toLowerCase();
-    const taksitSira = sozlesme.taksit_sira?.toString() || '';
-    const vadeAraligi = sozlesme.vade_araligi?.toString() || '';
-    const taksitTutari = (sozlesme.taksit_tutari || sozlesme.aylik_tutar)?.toString() || '';
-    const status = (sozlesme.status ?? 1).toString();
+
+    // Status filtresi - eğer tüm taksitler aynı durumda ise
+    let statusMatch = true;
+    if (aramalar.status !== '') {
+      const arananStatus = parseInt(aramalar.status);
+      statusMatch = sozlesme.taksitler.every(t => t.status === arananStatus);
+    }
 
     return (
       isimSoyisim.includes(aramalar.isim_soyisim.toLowerCase()) &&
       sozlesmeNo.includes(aramalar.sozlesme_no.toLowerCase()) &&
-      vadeTarihi.includes(aramalar.sozlesme_tarihi.toLowerCase()) &&
-      taksitSira.includes(aramalar.taksit_sayisi) &&
-      vadeAraligi.includes(aramalar.vade_araligi) &&
-      taksitTutari.includes(aramalar.taksit_tutari) &&
-      (aramalar.status === '' || status === aramalar.status)
+      statusMatch
     );
   });
 
+  // Pagination hesaplamaları
   const toplamSayfa = Math.ceil(filtrelenmisVeriler.length / sayfaBasinaKayit);
   const baslangicIndex = (mevcutSayfa - 1) * sayfaBasinaKayit;
   const bitisIndex = baslangicIndex + sayfaBasinaKayit;
   const mevcutVeriler = filtrelenmisVeriler.slice(baslangicIndex, bitisIndex);
 
-  const sozlesmeleriYukle = async () => {
+  // Taksitleri yükle
+  const taksitleriYukle = async () => {
     setYukleniyor(true);
     setHata('');
 
@@ -95,47 +128,55 @@ const SozlesmeListesi = ({ yenile }) => {
       const q = query(collection(db, 'sozlesmeler'), orderBy('olusturma_tarihi', 'desc'));
       const querySnapshot = await getDocs(q);
 
-      const sozlesmeListesi = [];
+      const taksitListesi = [];
       querySnapshot.forEach((doc) => {
-        sozlesmeListesi.push({
+        taksitListesi.push({
           id: doc.id,
           ...doc.data()
         });
       });
 
-      setSozlesmeler(sozlesmeListesi);
+      setTaksitler(taksitListesi);
     } catch (error) {
-      console.error('Sözleşmeler yüklenirken hata:', error);
-      setHata('Sözleşmeler yüklenirken bir hata oluştu');
+      console.error('Taksitler yüklenirken hata:', error);
+      setHata('Veriler yüklenirken bir hata oluştu');
     } finally {
       setYukleniyor(false);
     }
   };
 
-  const sozlesmeSil = async (id, sozlesmeNo) => {
-    if (!window.confirm(`"${sozlesmeNo}" numaralı sözleşmeyi silmek istediğinize emin misiniz?`)) {
+  // Sözleşmenin tüm taksitlerini sil
+  const sozlesmeSil = async (sozlesmeNo) => {
+    if (!window.confirm(`"${sozlesmeNo}" numaralı sözleşmenin tüm taksitlerini silmek istediğinize emin misiniz?`)) {
       return;
     }
 
     try {
-      await deleteDoc(doc(db, 'sozlesmeler', id));
-      setSozlesmeler(prev => prev.filter(s => s.id !== id));
-      alert('Sözleşme başarıyla silindi!');
+      const silinecekTaksitler = taksitler.filter(t => t.sozlesme_no === sozlesmeNo);
+      const silmePromises = silinecekTaksitler.map(taksit =>
+        deleteDoc(doc(db, 'sozlesmeler', taksit.id))
+      );
+
+      await Promise.all(silmePromises);
+
+      setTaksitler(prev => prev.filter(t => t.sozlesme_no !== sozlesmeNo));
+      alert('Sözleşme ve tüm taksitleri başarıyla silindi!');
     } catch (error) {
       console.error('Sözleşme silinirken hata:', error);
       alert('Sözleşme silinirken bir hata oluştu');
     }
   };
 
-  const statusDegistir = async (id, mevcutStatus) => {
+  // Taksit durumunu değiştir
+  const taksitStatusDegistir = async (taksitId, mevcutStatus) => {
     try {
       const yeniStatus = mevcutStatus === 1 ? 0 : 1;
-      await updateDoc(doc(db, 'sozlesmeler', id), {
+      await updateDoc(doc(db, 'sozlesmeler', taksitId), {
         status: yeniStatus
       });
 
-      setSozlesmeler(prev => prev.map(s =>
-        s.id === id ? { ...s, status: yeniStatus } : s
+      setTaksitler(prev => prev.map(t =>
+        t.id === taksitId ? { ...t, status: yeniStatus } : t
       ));
     } catch (error) {
       console.error('Status güncellenirken hata:', error);
@@ -143,8 +184,49 @@ const SozlesmeListesi = ({ yenile }) => {
     }
   };
 
+  // Taksit sil
+  const taksitSil = async (taksitId, sozlesmeNo, taksitSira) => {
+    if (!window.confirm(`"${sozlesmeNo}" sözleşmesinin ${taksitSira}. taksitini silmek istediğinize emin misiniz?`)) {
+      return;
+    }
+
+    try {
+      await deleteDoc(doc(db, 'sozlesmeler', taksitId));
+      setTaksitler(prev => prev.filter(t => t.id !== taksitId));
+      alert('Taksit başarıyla silindi!');
+
+      // Eğer modal açıksa ve bu sözleşmeye aitse, modalı güncelle
+      if (seciliSozlesme && seciliSozlesme.sozlesme_no === sozlesmeNo) {
+        const kalanTaksitler = taksitler.filter(t =>
+          t.sozlesme_no === sozlesmeNo && t.id !== taksitId
+        );
+
+        if (kalanTaksitler.length === 0) {
+          setModalAcik(false);
+          setSeciliSozlesme(null);
+        }
+      }
+    } catch (error) {
+      console.error('Taksit silinirken hata:', error);
+      alert('Taksit silinirken bir hata oluştu');
+    }
+  };
+
+  // Modal aç
+  const detayGoster = (sozlesme) => {
+    setSeciliSozlesme(sozlesme);
+    setModalAcik(true);
+  };
+
+  // Modal kapat
+  const modalKapat = () => {
+    setModalAcik(false);
+    setSeciliSozlesme(null);
+  };
+
+  // Component yüklendiğinde ve yenile değiştiğinde verileri yükle
   useEffect(() => {
-    sozlesmeleriYukle();
+    taksitleriYukle();
   }, [yenile]);
 
   if (yukleniyor) {
@@ -169,290 +251,376 @@ const SozlesmeListesi = ({ yenile }) => {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden">
-      <div className="px-6 py-4 border-b border-gray-200">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800">
-              Sözleşme Listesi
-            </h2>
-            <p className="text-gray-600 mt-1">
-              Toplam {sozlesmeler.length} sözleşme • {filtrelenmisVeriler.length} sonuç gösteriliyor
-            </p>
+    <>
+      <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800">
+                Sözleşme Listesi
+              </h2>
+              <p className="text-gray-600 mt-1">
+                Toplam {gruplananSozlesmeler.length} sözleşme • {filtrelenmisVeriler.length} sonuç gösteriliyor
+              </p>
+            </div>
+            {(Object.values(aramalar).some(v => v !== '')) && (
+              <button
+                onClick={aramalariTemizle}
+                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium rounded-lg transition duration-200"
+              >
+                Aramaları Temizle
+              </button>
+            )}
           </div>
-          {(Object.values(aramalar).some(v => v !== '')) && (
-            <button
-              onClick={aramalariTemizle}
-              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium rounded-lg transition duration-200"
-            >
-              Aramaları Temizle
-            </button>
-          )}
         </div>
-      </div>
 
-      {sozlesmeler.length === 0 ? (
-        <div className="px-6 py-12 text-center">
-          <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
-          <p className="mt-4 text-gray-600">Henüz sözleşme eklenmemiş</p>
-          <p className="text-sm text-gray-500 mt-1">Yukarıdaki formu kullanarak yeni bir sözleşme ekleyebilirsiniz</p>
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  İsim Soyisim
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Sözleşme No
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Vade Tarihi
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Taksit Sırası
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Vade Aralığı
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Taksit Tutarı
-                </th>
-                <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Durum
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  İşlemler
-                </th>
-              </tr>
-              <tr className="bg-gray-100">
-                <th className="px-2 py-2">
-                  <input
-                    type="text"
-                    placeholder="İsim/Soyisim Ara..."
-                    value={aramalar.isim_soyisim}
-                    onChange={(e) => aramaDegistir('isim_soyisim', e.target.value)}
-                    className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent outline-none"
-                  />
-                </th>
-                <th className="px-2 py-2">
-                  <input
-                    type="text"
-                    placeholder="Sözleşme No..."
-                    value={aramalar.sozlesme_no}
-                    onChange={(e) => aramaDegistir('sozlesme_no', e.target.value)}
-                    className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent outline-none"
-                  />
-                </th>
-                <th className="px-2 py-2">
-                  <input
-                    type="text"
-                    placeholder="Vade Tarihi..."
-                    value={aramalar.sozlesme_tarihi}
-                    onChange={(e) => aramaDegistir('sozlesme_tarihi', e.target.value)}
-                    className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent outline-none"
-                  />
-                </th>
-                <th className="px-2 py-2">
-                  <input
-                    type="text"
-                    placeholder="Taksit Sırası..."
-                    value={aramalar.taksit_sayisi}
-                    onChange={(e) => aramaDegistir('taksit_sayisi', e.target.value)}
-                    className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent outline-none"
-                  />
-                </th>
-                <th className="px-2 py-2">
-                  <input
-                    type="text"
-                    placeholder="Vade..."
-                    value={aramalar.vade_araligi}
-                    onChange={(e) => aramaDegistir('vade_araligi', e.target.value)}
-                    className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent outline-none"
-                  />
-                </th>
-                <th className="px-2 py-2">
-                  <input
-                    type="text"
-                    placeholder="Tutar..."
-                    value={aramalar.taksit_tutari}
-                    onChange={(e) => aramaDegistir('taksit_tutari', e.target.value)}
-                    className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent outline-none"
-                  />
-                </th>
-                <th className="px-2 py-2">
-                  <select
-                    value={aramalar.status}
-                    onChange={(e) => aramaDegistir('status', e.target.value)}
-                    className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent outline-none"
-                  >
-                    <option value="">Tümü</option>
-                    <option value="1">Aktif</option>
-                    <option value="0">Kapalı</option>
-                  </select>
-                </th>
-                <th className="px-2 py-2"></th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {mevcutVeriler.map((sozlesme) => (
-                <tr key={sozlesme.id} className="hover:bg-gray-50 transition">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="flex items-center">
+        {gruplananSozlesmeler.length === 0 ? (
+          <div className="px-6 py-12 text-center">
+            <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p className="mt-4 text-gray-600">Henüz sözleşme eklenmemiş</p>
+            <p className="text-sm text-gray-500 mt-1">Yukarıdaki formu kullanarak yeni bir sözleşme ekleyebilirsiniz</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    İsim Soyisim
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Sözleşme No
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Toplam Tutar
+                  </th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Durum
+                  </th>
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    İşlemler
+                  </th>
+                </tr>
+                <tr className="bg-gray-100">
+                  <th className="px-2 py-2">
+                    <input
+                      type="text"
+                      placeholder="İsim/Soyisim Ara..."
+                      value={aramalar.isim_soyisim}
+                      onChange={(e) => aramaDegistir('isim_soyisim', e.target.value)}
+                      className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent outline-none"
+                    />
+                  </th>
+                  <th className="px-2 py-2">
+                    <input
+                      type="text"
+                      placeholder="Sözleşme No..."
+                      value={aramalar.sozlesme_no}
+                      onChange={(e) => aramaDegistir('sozlesme_no', e.target.value)}
+                      className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent outline-none"
+                    />
+                  </th>
+                  <th className="px-2 py-2"></th>
+                  <th className="px-2 py-2">
+                    <select
+                      value={aramalar.status}
+                      onChange={(e) => aramaDegistir('status', e.target.value)}
+                      className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent outline-none"
+                    >
+                      <option value="">Tümü</option>
+                      <option value="1">Aktif</option>
+                      <option value="0">Kapalı</option>
+                    </select>
+                  </th>
+                  <th className="px-2 py-2"></th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {mevcutVeriler.map((sozlesme) => (
+                  <tr key={sozlesme.sozlesme_no} className="hover:bg-gray-50 transition">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
                         {sozlesme.isim} {sozlesme.soyisim}
                       </div>
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {sozlesme.sozlesme_no}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-600">
-                      {formatTarih(sozlesme.vade_tarihi)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                      {sozlesme.taksit_sira} / {sozlesme.toplam_taksit}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-purple-100 text-purple-800">
-                      {sozlesme.vade_araligi} Gün
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
-                      {formatPara(sozlesme.taksit_tutari || sozlesme.aylik_tutar)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-center">
-
-                    <button
-                      onClick={() => statusDegistir(sozlesme.id, sozlesme.status ?? 1)}
-                      className={`inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full transition duration-200 ${
-                        (sozlesme.status ?? 1) === 1
-                          ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                      }`}
-                    >
-                      {(sozlesme.status ?? 1) === 1 ? (
-                        <>
-                          <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-gray-900">
+                        {sozlesme.sozlesme_no}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {sozlesme.taksitler.length} taksit
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm font-bold text-green-600">
+                        {formatPara(sozlesme.toplam_tutar)}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <div className="flex flex-col items-center gap-1">
+                        {sozlesme.aktif_taksit > 0 && (
+                          <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                            {sozlesme.aktif_taksit} Aktif
+                          </span>
+                        )}
+                        {sozlesme.kapali_taksit > 0 && (
+                          <span className="px-2 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-800">
+                            {sozlesme.kapali_taksit} Kapalı
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap text-center">
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => detayGoster(sozlesme)}
+                          className="inline-flex items-center px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition duration-200"
+                          title="Detayları Görüntüle"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                           </svg>
-                          Aktif
-                        </>
-                      ) : (
-                        <>
-                          <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                        </button>
+                        <button
+                          onClick={() => sozlesmeSil(sozlesme.sozlesme_no)}
+                          className="inline-flex items-center px-3 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition duration-200"
+                          title="Sözleşmeyi Sil"
+                        >
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                           </svg>
-                          Kapalı
-                        </>
-                      )}
-                    </button>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <button
-                      onClick={() => sozlesmeSil(sozlesme.id, sozlesme.sozlesme_no)}
-                      className="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-lg transition duration-200"
-                    >
-                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                      Sil
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
 
-        {filtrelenmisVeriler.length > 0 && toplamSayfa > 1 && (
-            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-gray-700">
-                  <span className="font-medium">{baslangicIndex + 1}</span>
-                  {' '}-{' '}
-                  <span className="font-medium">{Math.min(bitisIndex, filtrelenmisVeriler.length)}</span>
-                  {' '}arası gösteriliyor (Toplam{' '}
-                  <span className="font-medium">{filtrelenmisVeriler.length}</span>
-                  {' '}kayıt)
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => setMevcutSayfa(1)}
-                    disabled={mevcutSayfa === 1}
-                    className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                  >
-                    İlk
-                  </button>
-
-                  <button
-                    onClick={() => setMevcutSayfa(prev => Math.max(prev - 1, 1))}
-                    disabled={mevcutSayfa === 1}
-                    className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                  >
-                    Önceki
-                  </button>
-
-                  <div className="flex items-center space-x-1">
-                    {Array.from({ length: toplamSayfa }, (_, i) => i + 1)
-                      .filter(sayfa => {
-                        if (toplamSayfa <= 7) return true;
-                        if (sayfa === 1 || sayfa === toplamSayfa) return true;
-                        return sayfa >= mevcutSayfa - 1 && sayfa <= mevcutSayfa + 1;
-                      })
-                      .map((sayfa, index, array) => (
-                        <React.Fragment key={sayfa}>
-                          {index > 0 && array[index - 1] !== sayfa - 1 && (
-                            <span className="px-2 text-gray-500">...</span>
-                          )}
-                          <button
-                            onClick={() => setMevcutSayfa(sayfa)}
-                            className={`px-3 py-1 text-sm font-medium rounded-md transition ${
-                              mevcutSayfa === sayfa
-                                ? 'bg-blue-600 text-white'
-                                : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
-                            }`}
-                          >
-                            {sayfa}
-                          </button>
-                        </React.Fragment>
-                      ))}
+            {filtrelenmisVeriler.length > 0 && toplamSayfa > 1 && (
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-700">
+                    <span className="font-medium">{baslangicIndex + 1}</span>
+                    {' '}-{' '}
+                    <span className="font-medium">{Math.min(bitisIndex, filtrelenmisVeriler.length)}</span>
+                    {' '}arası gösteriliyor (Toplam{' '}
+                    <span className="font-medium">{filtrelenmisVeriler.length}</span>
+                    {' '}kayıt)
                   </div>
 
-                  <button
-                    onClick={() => setMevcutSayfa(prev => Math.min(prev + 1, toplamSayfa))}
-                    disabled={mevcutSayfa === toplamSayfa}
-                    className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                  >
-                    Sonraki
-                  </button>
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => setMevcutSayfa(1)}
+                      disabled={mevcutSayfa === 1}
+                      className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                    >
+                      İlk
+                    </button>
 
-                  <button
-                    onClick={() => setMevcutSayfa(toplamSayfa)}
-                    disabled={mevcutSayfa === toplamSayfa}
-                    className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
-                  >
-                    Son
-                  </button>
+                    <button
+                      onClick={() => setMevcutSayfa(prev => Math.max(prev - 1, 1))}
+                      disabled={mevcutSayfa === 1}
+                      className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                    >
+                      Önceki
+                    </button>
+
+                    <div className="flex items-center space-x-1">
+                      {Array.from({ length: toplamSayfa }, (_, i) => i + 1)
+                        .filter(sayfa => {
+                          if (toplamSayfa <= 7) return true;
+                          if (sayfa === 1 || sayfa === toplamSayfa) return true;
+                          return sayfa >= mevcutSayfa - 1 && sayfa <= mevcutSayfa + 1;
+                        })
+                        .map((sayfa, index, array) => (
+                          <React.Fragment key={sayfa}>
+                            {index > 0 && array[index - 1] !== sayfa - 1 && (
+                              <span className="px-2 text-gray-500">...</span>
+                            )}
+                            <button
+                              onClick={() => setMevcutSayfa(sayfa)}
+                              className={`px-3 py-1 text-sm font-medium rounded-md transition ${
+                                mevcutSayfa === sayfa
+                                  ? 'bg-blue-600 text-white'
+                                  : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                              }`}
+                            >
+                              {sayfa}
+                            </button>
+                          </React.Fragment>
+                        ))}
+                    </div>
+
+                    <button
+                      onClick={() => setMevcutSayfa(prev => Math.min(prev + 1, toplamSayfa))}
+                      disabled={mevcutSayfa === toplamSayfa}
+                      className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                    >
+                      Sonraki
+                    </button>
+
+                    <button
+                      onClick={() => setMevcutSayfa(toplamSayfa)}
+                      disabled={mevcutSayfa === toplamSayfa}
+                      className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                    >
+                      Son
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Detay Modal */}
+      {modalAcik && seciliSozlesme && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+            {/* Modal Header */}
+            <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-xl font-bold text-gray-800">
+                    {seciliSozlesme.isim} {seciliSozlesme.soyisim}
+                  </h3>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Sözleşme No: <span className="font-semibold">{seciliSozlesme.sozlesme_no}</span>
+                  </p>
+                </div>
+                <button
+                  onClick={modalKapat}
+                  className="p-2 hover:bg-gray-200 rounded-full transition"
+                >
+                  <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body */}
+            <div className="px-6 py-4 overflow-y-auto max-h-[calc(90vh-140px)]">
+              {/* Özet Bilgiler */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="bg-blue-50 p-4 rounded-lg">
+                  <p className="text-sm text-gray-600">Sözleşme Tarihi</p>
+                  <p className="text-lg font-bold text-blue-600">
+                    {formatTarih(seciliSozlesme.sozlesme_tarihi)}
+                  </p>
+                </div>
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <p className="text-sm text-gray-600">Vade Başlangıç</p>
+                  <p className="text-lg font-bold text-green-600">
+                    {formatTarih(seciliSozlesme.vade_baslangic_tarihi)}
+                  </p>
+                </div>
+                <div className="bg-purple-50 p-4 rounded-lg">
+                  <p className="text-sm text-gray-600">Toplam Tutar</p>
+                  <p className="text-lg font-bold text-purple-600">
+                    {formatPara(seciliSozlesme.toplam_tutar)}
+                  </p>
+                </div>
+              </div>
+
+              {/* Taksit Listesi */}
+              <div>
+                <h4 className="text-lg font-bold text-gray-800 mb-4">
+                  Taksit Detayları ({seciliSozlesme.taksitler.length} Adet)
+                </h4>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                          Taksit
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                          Vade Tarihi
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                          Tutar
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                          Vade Aralığı
+                        </th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                          Durum
+                        </th>
+                        <th className="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase">
+                          İşlemler
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {seciliSozlesme.taksitler
+                        .sort((a, b) => a.taksit_sira - b.taksit_sira)
+                        .map((taksit) => (
+                        <tr key={taksit.id} className="hover:bg-gray-50">
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <span className="px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                              {taksit.taksit_sira} / {taksit.toplam_taksit}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
+                            {formatTarih(taksit.vade_tarihi)}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
+                            {formatPara(taksit.taksit_tutari)}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <span className="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">
+                              {taksit.vade_araligi} gün
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-center">
+                            <button
+                              onClick={() => taksitStatusDegistir(taksit.id, taksit.status ?? 1)}
+                              className={`inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full transition duration-200 ${
+                                (taksit.status ?? 1) === 1
+                                  ? 'bg-green-100 text-green-800 hover:bg-green-200'
+                                  : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+                              }`}
+                            >
+                              {(taksit.status ?? 1) === 1 ? 'Aktif' : 'Kapalı'}
+                            </button>
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap text-center">
+                            <button
+                              onClick={() => taksitSil(taksit.id, taksit.sozlesme_no, taksit.taksit_sira)}
+                              className="inline-flex items-center px-3 py-1 bg-red-600 hover:bg-red-700 text-white text-xs font-medium rounded transition duration-200"
+                            >
+                              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                              Sil
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </div>
-          )}
+
+            <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
+              <button
+                onClick={modalKapat}
+                className="w-full md:w-auto px-6 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg transition duration-200"
+              >
+                Kapat
+              </button>
+            </div>
+          </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 
