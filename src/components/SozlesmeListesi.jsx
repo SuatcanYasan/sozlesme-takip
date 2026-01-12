@@ -15,6 +15,8 @@ const SozlesmeListesi = ({ yenile }) => {
   });
   const [seciliSozlesme, setSeciliSozlesme] = useState(null);
   const [modalAcik, setModalAcik] = useState(false);
+  const [duzenlenenTaksit, setDuzenlenenTaksit] = useState(null);
+  const [geciciTutar, setGeciciTutar] = useState('');
 
   // Tarihi formatla
   const formatTarih = (timestamp) => {
@@ -184,6 +186,45 @@ const SozlesmeListesi = ({ yenile }) => {
     }
   };
 
+  const taksitTutariGuncelle = async (taksitId, yeniTutar, sozlesmeNo) => {
+    try {
+      const tutarSayi = parseFloat(yeniTutar);
+
+      if (isNaN(tutarSayi) || tutarSayi <= 0) {
+        alert('Lütfen geçerli bir tutar girin');
+        return;
+      }
+
+      await updateDoc(doc(db, 'sozlesmeler', taksitId), {
+        taksit_tutari: tutarSayi
+      });
+
+      setTaksitler(prev => prev.map(t =>
+        t.id === taksitId ? { ...t, taksit_tutari: tutarSayi } : t
+      ));
+
+      if (seciliSozlesme && seciliSozlesme.sozlesme_no === sozlesmeNo) {
+        const guncelTaksitler = taksitler.map(t =>
+          t.id === taksitId ? { ...t, taksit_tutari: tutarSayi } : t
+        );
+
+        const sozlesmeninTaksitleri = guncelTaksitler.filter(t => t.sozlesme_no === sozlesmeNo);
+        const yeniToplamTutar = sozlesmeninTaksitleri.reduce((sum, t) => sum + t.taksit_tutari, 0);
+
+        setSeciliSozlesme(prev => ({
+          ...prev,
+          taksitler: sozlesmeninTaksitleri,
+          toplam_tutar: yeniToplamTutar
+        }));
+      }
+
+      alert('Taksit tutarı başarıyla güncellendi!');
+    } catch (error) {
+      console.error('Tutar güncellenirken hata:', error);
+      alert('Tutar güncellenirken bir hata oluştu');
+    }
+  };
+
   // Taksit sil
   const taksitSil = async (taksitId, sozlesmeNo, taksitSira) => {
     if (!window.confirm(`"${sozlesmeNo}" sözleşmesinin ${taksitSira}. taksitini silmek istediğinize emin misiniz?`)) {
@@ -222,6 +263,24 @@ const SozlesmeListesi = ({ yenile }) => {
   const modalKapat = () => {
     setModalAcik(false);
     setSeciliSozlesme(null);
+    setDuzenlenenTaksit(null);
+    setGeciciTutar('');
+  };
+
+  const tutarDuzenlemeyeBasla = (taksitId, mevcutTutar) => {
+    setDuzenlenenTaksit(taksitId);
+    setGeciciTutar(mevcutTutar.toString());
+  };
+
+  const tutarDuzenlemeIptal = () => {
+    setDuzenlenenTaksit(null);
+    setGeciciTutar('');
+  };
+
+  const tutarKaydet = async (taksitId, sozlesmeNo) => {
+    await taksitTutariGuncelle(taksitId, geciciTutar, sozlesmeNo);
+    setDuzenlenenTaksit(null);
+    setGeciciTutar('');
   };
 
   // Component yüklendiğinde ve yenile değiştiğinde verileri yükle
@@ -528,7 +587,6 @@ const SozlesmeListesi = ({ yenile }) => {
                 </div>
               </div>
 
-              {/* Taksit Listesi */}
               <div>
                 <h4 className="text-lg font-bold text-gray-800 mb-4">
                   Taksit Detayları ({seciliSozlesme.taksitler.length} Adet)
@@ -570,8 +628,60 @@ const SozlesmeListesi = ({ yenile }) => {
                           <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                             {formatTarih(taksit.vade_tarihi)}
                           </td>
-                          <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {formatPara(taksit.taksit_tutari)}
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            {duzenlenenTaksit === taksit.id ? (
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="number"
+                                  value={geciciTutar}
+                                  onChange={(e) => setGeciciTutar(e.target.value)}
+                                  className="w-24 px-2 py-1 text-sm border border-blue-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                                  step="0.01"
+                                  min="0"
+                                  autoFocus
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      tutarKaydet(taksit.id, taksit.sozlesme_no);
+                                    } else if (e.key === 'Escape') {
+                                      tutarDuzenlemeIptal();
+                                    }
+                                  }}
+                                />
+                                <button
+                                  onClick={() => tutarKaydet(taksit.id, taksit.sozlesme_no)}
+                                  className="p-1 bg-green-600 hover:bg-green-700 text-white rounded transition"
+                                  title="Kaydet"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                </button>
+                                <button
+                                  onClick={tutarDuzenlemeIptal}
+                                  className="p-1 bg-gray-600 hover:bg-gray-700 text-white rounded transition"
+                                  title="İptal"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <span className="text-sm font-medium text-gray-900">
+                                  {formatPara(taksit.taksit_tutari)}
+                                </span>
+                                <button
+                                  onClick={() => tutarDuzenlemeyeBasla(taksit.id, taksit.taksit_tutari)}
+                                  className="p-1 text-blue-600 hover:text-blue-800 transition"
+                                  title="Tutarı Düzenle"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                  </svg>
+                                </button>
+                              </div>
+                            )}
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap">
                             <span className="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">
