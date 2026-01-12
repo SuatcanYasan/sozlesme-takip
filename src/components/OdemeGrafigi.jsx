@@ -18,46 +18,39 @@ const OdemeGrafigi = ({ yenile }) => {
     }).format(tutar);
   };
 
-  const odemeTarihleriniHesapla = (sozlesmeler) => {
+  const odemeTarihleriniHesapla = (vadeler) => {
     const aylikOdemeler = {};
 
-    sozlesmeler.forEach((sozlesme) => {
-      if (!sozlesme.sozlesme_tarihi || !sozlesme.vade_araligi || !sozlesme.taksit_sayisi) {
+    vadeler.forEach((vade) => {
+      if (!vade.vade_tarihi || !vade.taksit_tutari || vade.status !== 1) {
         return;
       }
 
       try {
-        let odemeTarihi = sozlesme.sozlesme_tarihi.toDate();
-        const vadeAraligi = parseInt(sozlesme.vade_araligi);
-        const taksitSayisi = parseInt(sozlesme.taksit_sayisi);
-        const taksitTutari = parseFloat(sozlesme.taksit_tutari || sozlesme.taksit_tutari);
+        const vadeTarihi = vade.vade_tarihi.toDate();
+        const tutar = parseFloat(vade.taksit_tutari);
 
-        for (let i = 0; i < taksitSayisi; i++) {
-          odemeTarihi = new Date(odemeTarihi);
-          odemeTarihi.setDate(odemeTarihi.getDate() + vadeAraligi);
+        const yil = vadeTarihi.getFullYear();
+        const ay = vadeTarihi.getMonth() + 1;
+        const ayAnahtari = `${yil}-${ay.toString().padStart(2, '0')}`;
 
-          const yil = odemeTarihi.getFullYear();
-          const ay = odemeTarihi.getMonth() + 1;
-          const ayAnahtari = `${yil}-${ay.toString().padStart(2, '0')}`;
+        const ayAdi = vadeTarihi.toLocaleDateString('tr-TR', {
+          year: 'numeric',
+          month: 'long'
+        });
 
-          const ayAdi = odemeTarihi.toLocaleDateString('tr-TR', {
-            year: 'numeric',
-            month: 'long'
-          });
-
-          if (!aylikOdemeler[ayAnahtari]) {
-            aylikOdemeler[ayAnahtari] = {
-              ay: ayAdi,
-              tutar: 0,
-              adet: 0
-            };
-          }
-
-          aylikOdemeler[ayAnahtari].tutar += taksitTutari;
-          aylikOdemeler[ayAnahtari].adet += 1;
+        if (!aylikOdemeler[ayAnahtari]) {
+          aylikOdemeler[ayAnahtari] = {
+            ay: ayAdi,
+            tutar: 0,
+            adet: 0
+          };
         }
+
+        aylikOdemeler[ayAnahtari].tutar += tutar;
+        aylikOdemeler[ayAnahtari].adet += 1;
       } catch (error) {
-        console.error('Ödeme tarihi hesaplama hatası:', error, sozlesme);
+        console.error('Ödeme tarihi hesaplama hatası:', error, vade);
       }
     });
 
@@ -81,16 +74,21 @@ const OdemeGrafigi = ({ yenile }) => {
 
     try {
       const querySnapshot = await getDocs(collection(db, 'sozlesmeler'));
-      const taksitListesi = [];
+      const vadeListesi = [];
 
       querySnapshot.forEach((doc) => {
-        taksitListesi.push({
+        vadeListesi.push({
           id: doc.id,
           ...doc.data()
         });
       });
 
-      const grafikVerisi = odemeTarihleriniHesapla(taksitListesi);
+      console.log('Toplam vade sayısı:', vadeListesi.length);
+      console.log('Örnek vade verisi:', vadeListesi[0]);
+      console.log('Status 1 olan vadeler:', vadeListesi.filter(v => v.status === 1).length);
+
+      const grafikVerisi = odemeTarihleriniHesapla(vadeListesi);
+      console.log('Grafik verisi:', grafikVerisi);
       setGrafikVerisi(grafikVerisi);
     } catch (error) {
       console.error('Veriler yüklenirken hata:', error);
@@ -207,8 +205,6 @@ const OdemeGrafigi = ({ yenile }) => {
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="ay"
-              angle={-45}
-              textAnchor="end"
               height={100}
               tick={{ fontSize: 12 }}
             />
