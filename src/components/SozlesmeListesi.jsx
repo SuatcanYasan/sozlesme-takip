@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { collection, getDocs, deleteDoc, doc, query, orderBy, updateDoc, addDoc, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase';
+import SozlesmeForm from './SozlesmeForm';
 
-const SozlesmeListesi = ({ yenile }) => {
+const SozlesmeListesi = ({ yenile, onSozlesmeEklendi }) => {
   const [taksitler, setTaksitler] = useState([]);
   const [yukleniyor, setYukleniyor] = useState(true);
   const [hata, setHata] = useState('');
@@ -21,6 +22,7 @@ const SozlesmeListesi = ({ yenile }) => {
   const [odemeYapilacakTaksit, setOdemeYapilacakTaksit] = useState(null);
   const [odemeTutari, setOdemeTutari] = useState('');
   const [odemeTarihi, setOdemeTarihi] = useState('');
+  const [formModalAcik, setFormModalAcik] = useState(false);
 
   const formatTarih = (timestamp) => {
     if (!timestamp) return '-';
@@ -401,14 +403,25 @@ const SozlesmeListesi = ({ yenile }) => {
                 Toplam {gruplananSozlesmeler.length} sözleşme • {filtrelenmisVeriler.length} sonuç gösteriliyor
               </p>
             </div>
-            {(Object.values(aramalar).some(v => v !== '')) && (
+            <div className="flex items-center gap-3">
               <button
-                onClick={aramalariTemizle}
-                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium rounded-lg transition duration-200"
+                onClick={() => setFormModalAcik(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition duration-200 shadow-sm"
               >
-                Aramaları Temizle
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Yeni Sözleşme Ekle
               </button>
-            )}
+              {(Object.values(aramalar).some(v => v !== '')) && (
+                <button
+                  onClick={aramalariTemizle}
+                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium rounded-lg transition duration-200"
+                >
+                  Aramaları Temizle
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
@@ -942,6 +955,38 @@ const SozlesmeListesi = ({ yenile }) => {
               >
                 Ödemeyi Kaydet
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {formModalAcik && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-bold text-gray-800">Yeni Sözleşme Ekle</h3>
+                <button
+                  onClick={() => setFormModalAcik(false)}
+                  className="p-2 hover:bg-gray-200 rounded-full transition"
+                >
+                  <svg className="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="px-6 py-4 overflow-y-auto max-h-[calc(90vh-140px)]">
+              <SozlesmeForm
+                onSozlesmeEklendi={() => {
+                  setFormModalAcik(false);
+                  taksitleriYukle();
+                  if (onSozlesmeEklendi) {
+                    onSozlesmeEklendi();
+                  }
+                }}
+              />
             </div>
           </div>
         </div>

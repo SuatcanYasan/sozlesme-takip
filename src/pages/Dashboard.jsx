@@ -159,9 +159,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <SozlesmeForm onSozlesmeEklendi={handleSozlesmeEklendi} />
-
-      <SozlesmeListesi yenile={yenilemeAnahtari} />
+      <SozlesmeListesi yenile={yenilemeAnahtari} onSozlesmeEklendi={handleSozlesmeEklendi} />
 
       <OdemeGrafigi yenile={yenilemeAnahtari} />
     </div>

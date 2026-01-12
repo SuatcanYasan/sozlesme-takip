@@ -108,13 +108,8 @@ const SozlesmeForm = ({ onSozlesmeEklendi }) => {
   };
 
   return (
-      <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">
-          Yeni Sözleşme Ekle
-        </h2>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* İsim */}
             <div>
               <label htmlFor="isim" className="block text-sm font-medium text-gray-700 mb-2">
@@ -274,7 +269,6 @@ const SozlesmeForm = ({ onSozlesmeEklendi }) => {
             {yukleniyor ? 'Ekleniyor...' : 'Sözleşme Ekle'}
           </button>
         </form>
-      </div>
   );
 };
 
