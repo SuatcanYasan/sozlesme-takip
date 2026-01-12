@@ -8,7 +8,7 @@ const GiderListesi = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Toplam Gider Sayısı</p>
-              <p className="text-2xl font-bold text-gray-900 mt-2">0</p>
+              <p className="text-xl md:text-2xl font-bold text-gray-900 mt-2 font-number">0</p>
             </div>
             <div className="bg-red-100 p-3 rounded-lg">
               <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -22,7 +22,7 @@ const GiderListesi = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Toplam Gider Tutarı</p>
-              <p className="text-2xl font-bold text-red-600 mt-2">₺0.00</p>
+              <p className="text-xl md:text-2xl font-bold text-red-600 mt-2 font-number">₺0.00</p>
             </div>
             <div className="bg-red-100 p-3 rounded-lg">
               <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -36,7 +36,7 @@ const GiderListesi = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Ortalama Gider</p>
-              <p className="text-2xl font-bold text-orange-600 mt-2">₺0.00</p>
+              <p className="text-xl md:text-2xl font-bold text-orange-600 mt-2 font-number">₺0.00</p>
             </div>
             <div className="bg-orange-100 p-3 rounded-lg">
               <svg className="w-6 h-6 text-orange-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -49,7 +49,7 @@ const GiderListesi = () => {
 
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-800">Gider Listesi</h2>
+          <h2 className="text-lg font-bold text-gray-800">Gider Listesi</h2>
           <p className="text-sm text-gray-600 mt-1">Tüm giderler ve harcamalar</p>
         </div>
 

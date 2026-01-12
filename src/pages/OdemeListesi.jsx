@@ -105,7 +105,7 @@ const OdemeListesi = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Toplam Ödeme Sayısı</p>
-              <p className="text-2xl font-bold text-gray-900 mt-2">{filtrelenmisOdemeler.length}</p>
+              <p className="text-xl md:text-2xl font-bold text-gray-900 mt-2 font-number">{filtrelenmisOdemeler.length}</p>
             </div>
             <div className="bg-blue-100 p-3 rounded-lg">
               <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -119,7 +119,7 @@ const OdemeListesi = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Toplam Ödeme Tutarı</p>
-              <p className="text-2xl font-bold text-green-600 mt-2">{formatPara(toplamOdeme)}</p>
+              <p className="text-xl md:text-2xl font-bold text-green-600 mt-2 font-number">{formatPara(toplamOdeme)}</p>
             </div>
             <div className="bg-green-100 p-3 rounded-lg">
               <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -133,7 +133,7 @@ const OdemeListesi = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Ortalama Ödeme</p>
-              <p className="text-2xl font-bold text-purple-600 mt-2">
+              <p className="text-xl md:text-2xl font-bold text-purple-600 mt-2 font-number">
                 {formatPara(filtrelenmisOdemeler.length > 0 ? toplamOdeme / filtrelenmisOdemeler.length : 0)}
               </p>
             </div>
@@ -148,7 +148,7 @@ const OdemeListesi = () => {
 
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200">
-          <h2 className="text-xl font-bold text-gray-800">Ödeme Geçmişi</h2>
+          <h2 className="text-lg font-bold text-gray-800">Ödeme Geçmişi</h2>
           <p className="text-sm text-gray-600 mt-1">Tüm ödemeler kronolojik sırada</p>
         </div>
 

@@ -17,7 +17,7 @@ const Header = () => {
       <div className="px-4 md:px-6 py-4">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl md:text-2xl font-bold text-gray-900">
+            <h1 className="text-lg md:text-xl font-bold text-gray-900">
               {currentPageName}
             </h1>
             <p className="text-xs md:text-sm text-gray-600 mt-1 hidden sm:block">

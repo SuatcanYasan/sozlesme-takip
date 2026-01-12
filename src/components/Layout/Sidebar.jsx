@@ -62,7 +62,7 @@ const Sidebar = () => {
             </svg>
             {isExpanded && (
               <div className="ml-3">
-                <h2 className="text-xl font-bold">Sözleşme</h2>
+                <h2 className="text-lg font-bold">Sözleşme</h2>
                 <p className="text-xs text-gray-400">Yönetim Paneli</p>
               </div>
             )}

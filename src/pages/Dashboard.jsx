@@ -98,7 +98,7 @@ const Dashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-blue-100 text-xs md:text-sm font-medium">Toplam Sözleşme</p>
-              <p className="text-2xl md:text-3xl font-bold mt-2">
+              <p className="text-xl md:text-2xl font-bold mt-2 font-number">
                 {yukleniyor ? '...' : istatistikler.toplamSozlesme}
               </p>
             </div>
@@ -114,7 +114,7 @@ const Dashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-green-100 text-xs md:text-sm font-medium">Toplam Gelir</p>
-              <p className="text-2xl md:text-3xl font-bold mt-2">
+              <p className="text-xl md:text-2xl font-bold mt-2 font-number">
                 {yukleniyor ? '...' : formatPara(istatistikler.toplamGelir)}
               </p>
             </div>
@@ -130,7 +130,7 @@ const Dashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-orange-100 text-xs md:text-sm font-medium">Bekleyen Ödeme</p>
-              <p className="text-2xl md:text-3xl font-bold mt-2">
+              <p className="text-xl md:text-2xl font-bold mt-2 font-number">
                 {yukleniyor ? '...' : formatPara(istatistikler.beklenenOdeme)}
               </p>
             </div>
@@ -146,7 +146,7 @@ const Dashboard = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-red-100 text-xs md:text-sm font-medium">Geciken Ödeme</p>
-              <p className="text-2xl md:text-3xl font-bold mt-2">
+              <p className="text-xl md:text-2xl font-bold mt-2 font-number">
                 {yukleniyor ? '...' : formatPara(istatistikler.gecikenOdeme)}
               </p>
             </div>

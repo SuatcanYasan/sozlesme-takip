@@ -109,8 +109,8 @@ const OdemeGrafigi = ({ yenile }) => {
       return (
         <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-lg">
           <p className="font-semibold text-gray-800">{payload[0].payload.ay}</p>
-          <p className="text-green-600 font-bold">{formatPara(payload[0].value)}</p>
-          <p className="text-sm text-gray-600">{payload[0].payload.adet} ödeme</p>
+          <p className="text-green-600 font-bold font-number">{formatPara(payload[0].value)}</p>
+          <p className="text-sm text-gray-600 font-number">{payload[0].payload.adet} ödeme</p>
         </div>
       );
     }
@@ -141,7 +141,7 @@ const OdemeGrafigi = ({ yenile }) => {
   if (grafikVerisi.length === 0) {
     return (
       <div className="bg-white rounded-lg shadow-md p-6">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">
+        <h2 className="text-lg font-bold text-gray-800 mb-4">
           Aylık Gelir Projeksiyonu
         </h2>
         <div className="text-center py-12">
@@ -160,7 +160,7 @@ const OdemeGrafigi = ({ yenile }) => {
       <div className="mb-6">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800">
+            <h2 className="text-lg font-bold text-gray-800">
               Aylık Gelir Projeksiyonu
             </h2>
             <p className="text-gray-600 mt-1">
@@ -169,7 +169,7 @@ const OdemeGrafigi = ({ yenile }) => {
           </div>
           <div className="text-right">
             <p className="text-sm text-gray-600">Toplam Beklenen Gelir</p>
-            <p className="text-2xl font-bold text-green-600">
+            <p className="text-xl md:text-2xl font-bold text-green-600 font-number">
               {formatPara(toplamGelir)}
             </p>
           </div>
@@ -180,17 +180,17 @@ const OdemeGrafigi = ({ yenile }) => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-blue-50 p-4 rounded-lg">
             <p className="text-sm text-gray-600">Toplam Ödeme Dönemi</p>
-            <p className="text-xl font-bold text-blue-600">{grafikVerisi.length} Ay</p>
+            <p className="text-lg font-bold text-blue-600 font-number">{grafikVerisi.length} Ay</p>
           </div>
           <div className="bg-green-50 p-4 rounded-lg">
             <p className="text-sm text-gray-600">Aylık Ortalama</p>
-            <p className="text-xl font-bold text-green-600">
+            <p className="text-lg font-bold text-green-600 font-number">
               {formatPara(toplamGelir / grafikVerisi.length)}
             </p>
           </div>
           <div className="bg-purple-50 p-4 rounded-lg">
             <p className="text-sm text-gray-600">Toplam Ödeme Sayısı</p>
-            <p className="text-xl font-bold text-purple-600">
+            <p className="text-lg font-bold text-purple-600 font-number">
               {grafikVerisi.reduce((sum, item) => sum + item.adet, 0)} Adet
             </p>
           </div>
@@ -249,11 +249,11 @@ const OdemeGrafigi = ({ yenile }) => {
                   {veri.ay}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                  <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800 font-number">
                     {veri.adet} Ödeme
                   </span>
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">
+                <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600 font-number">
                   {formatPara(veri.tutar)}
                 </td>
               </tr>

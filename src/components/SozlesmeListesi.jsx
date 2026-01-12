@@ -397,7 +397,7 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi }) => {
         <div className="px-4 md:px-6 py-4 border-b border-gray-200">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
-              <h2 className="text-xl md:text-2xl font-bold text-gray-800">
+              <h2 className="text-lg md:text-xl font-bold text-gray-800">
                 Sözleşme Listesi
               </h2>
               <p className="text-sm md:text-base text-gray-600 mt-1">
@@ -638,7 +638,7 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi }) => {
             <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-xl font-bold text-gray-800">
+                  <h3 className="text-lg font-bold text-gray-800">
                     {seciliSozlesme.isim} {seciliSozlesme.soyisim}
                   </h3>
                   <p className="text-sm text-gray-600 mt-1">
@@ -872,7 +872,7 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi }) => {
             <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-xl font-bold text-gray-800">Ödeme Yap</h3>
+                  <h3 className="text-lg font-bold text-gray-800">Ödeme Yap</h3>
                   <p className="text-sm text-gray-600 mt-1">
                     {odemeYapilacakTaksit.isim} {odemeYapilacakTaksit.soyisim} - {odemeYapilacakTaksit.sozlesme_no}
                   </p>
@@ -968,7 +968,7 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi }) => {
           <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
             <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
               <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold text-gray-800">Yeni Sözleşme Ekle</h3>
+                <h3 className="text-lg font-bold text-gray-800">Yeni Sözleşme Ekle</h3>
                 <button
                   onClick={() => setFormModalAcik(false)}
                   className="p-2 hover:bg-gray-200 rounded-full transition"
