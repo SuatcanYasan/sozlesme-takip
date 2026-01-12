@@ -24,6 +24,8 @@
 - 🔄 **Gerçek Zamanlı Senkronizasyon** - Firebase Firestore entegrasyonu
 - 📈 **Gelir Projeksiyonu** - Aylık gelir grafiği ve ödeme takvimi
 - 🔘 **Durum Yönetimi** - Sözleşmeleri aktif/kapalı olarak işaretleme
+- 🔍 **Gelişmiş Arama** - Her sütun için özel arama filtreleri
+- 📄 **Pagination** - Sayfa başına 10 kayıt ile kolay navigasyon
 ### 🎨 Kullanıcı Arayüzü
 - ✨ Modern ve profesyonel tasarım (Tailwind CSS)
 - 📱 Tam responsive (Mobile-first yaklaşım)
@@ -141,6 +143,29 @@ Tarayıcınızda `http://localhost:5173` adresini açın 🎉
 - Tarihler Türkçe formatında (örn: "11 Ocak 2026")
 - Tutarlar TL sembolü ile (örn: "₺5.000,00")
 - Toplam tutar otomatik hesaplanır
+
+### 🔍 Arama ve Filtreleme
+
+- **Her Sütun İçin Arama:** Her sütunun altında arama kutusu bulunur
+- **Gerçek Zamanlı Filtreleme:** Yazdıkça sonuçlar anında filtrelenir
+- **Durum Filtresi:** Aktif/Kapalı sözleşmeleri seçerek filtreleyebilirsiniz
+- **Aramaları Temizle:** Tek tıkla tüm aramaları sıfırlayın
+
+### 📄 Pagination (Sayfalama)
+
+- **Sayfa Başına 10 Kayıt:** Liste otomatik olarak sayfalara bölünür
+- **Navigasyon Butonları:**
+  - İlk / Son sayfa
+  - Önceki / Sonraki sayfa
+  - Direkt sayfa numarasına tıklama
+- **Akıllı Sayfa Gösterimi:** Çok fazla sayfa varsa "..." ile kısaltılır
+- **Kayıt Sayacı:** "1-10 arası gösteriliyor (Toplam 25 kayıt)"
+
+### Sözleşme Durumu
+
+- **Aktif/Kapalı Toggle:** Her sözleşmenin yanındaki durum butonuna tıklayın
+- **Görsel Gösterge:** Yeşil (Aktif) / Gri (Kapalı)
+- **Tek Tıkla Değiştir:** Butona tıklayarak durumu hemen güncelleyin
 
 ### Sözleşme Silme
 
