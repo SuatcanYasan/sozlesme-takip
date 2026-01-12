@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Sidebar from './components/Layout/Sidebar';
 import Header from './components/Layout/Header';
 import Footer from './components/Layout/Footer';
+import MobileNav from './components/Layout/MobileNav';
 import Dashboard from './pages/Dashboard';
 import OdemeListesi from './pages/OdemeListesi';
 import GiderListesi from './pages/GiderListesi';
@@ -18,7 +19,7 @@ function App() {
         <div className="flex-1 flex flex-col min-w-0">
           <Header />
 
-          <main className="flex-1 overflow-y-auto p-4 md:p-6">
+          <main className="flex-1 overflow-y-auto p-4 md:p-6 pb-20 md:pb-6">
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard />} />
@@ -28,8 +29,12 @@ function App() {
             </Routes>
           </main>
 
-          <Footer />
+          <div className="hidden md:block">
+            <Footer />
+          </div>
         </div>
+
+        <MobileNav />
       </div>
     </BrowserRouter>
   );
