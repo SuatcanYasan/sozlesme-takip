@@ -60,6 +60,8 @@ const SozlesmeForm = ({ onSozlesmeEklendi }) => {
           taksit_sira: i + 1,
           toplam_taksit: taksitSayisi,
           taksit_tutari: taksitTutari,
+          odenen_tutar: 0,
+          kalan_tutar: taksitTutari,
           vade_araligi: vadeAraligi,
           status: 1,
           olusturma_tarihi: Timestamp.now()

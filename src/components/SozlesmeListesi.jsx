@@ -565,8 +565,7 @@ const SozlesmeListesi = ({ yenile }) => {
 
             {/* Modal Body */}
             <div className="px-6 py-4 overflow-y-auto max-h-[calc(90vh-140px)]">
-              {/* Özet Bilgiler */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-6">
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <p className="text-sm text-gray-600">Sözleşme Tarihi</p>
                   <p className="text-lg font-bold text-blue-600">
@@ -583,6 +582,18 @@ const SozlesmeListesi = ({ yenile }) => {
                   <p className="text-sm text-gray-600">Toplam Tutar</p>
                   <p className="text-lg font-bold text-purple-600">
                     {formatPara(seciliSozlesme.toplam_tutar)}
+                  </p>
+                </div>
+                <div className="bg-green-100 p-4 rounded-lg">
+                  <p className="text-sm text-gray-600">Toplam Ödenen</p>
+                  <p className="text-lg font-bold text-green-700">
+                    {formatPara(seciliSozlesme.taksitler.reduce((sum, t) => sum + (t.odenen_tutar || 0), 0))}
+                  </p>
+                </div>
+                <div className="bg-orange-50 p-4 rounded-lg">
+                  <p className="text-sm text-gray-600">Toplam Kalan</p>
+                  <p className="text-lg font-bold text-orange-600">
+                    {formatPara(seciliSozlesme.taksitler.reduce((sum, t) => sum + (t.kalan_tutar || t.taksit_tutari), 0))}
                   </p>
                 </div>
               </div>
@@ -603,6 +614,12 @@ const SozlesmeListesi = ({ yenile }) => {
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                           Tutar
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                          Ödenen
+                        </th>
+                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                          Kalan
                         </th>
                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                           Vade Aralığı
@@ -682,6 +699,16 @@ const SozlesmeListesi = ({ yenile }) => {
                                 </button>
                               </div>
                             )}
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <span className="text-sm font-medium text-green-600">
+                              {formatPara(taksit.odenen_tutar || 0)}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 whitespace-nowrap">
+                            <span className="text-sm font-medium text-orange-600">
+                              {formatPara(taksit.kalan_tutar || taksit.taksit_tutari)}
+                            </span>
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap">
                             <span className="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800">
