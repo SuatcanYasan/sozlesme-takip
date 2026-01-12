@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '../firebase';
+import { formatPara, formatTarih } from '../utils';
 
 const OdemeListesi = () => {
   const [odemeler, setOdemeler] = useState([]);
@@ -12,27 +13,6 @@ const OdemeListesi = () => {
     tarih: ''
   });
 
-  const formatTarih = (timestamp) => {
-    if (!timestamp) return '-';
-    try {
-      const tarih = timestamp.toDate();
-      return tarih.toLocaleDateString('tr-TR', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-    } catch (error) {
-      console.error('Tarih formatlama hatası:', error);
-      return '-';
-    }
-  };
-
-  const formatPara = (tutar) => {
-    return new Intl.NumberFormat('tr-TR', {
-      style: 'currency',
-      currency: 'TRY'
-    }).format(tutar);
-  };
 
   const odemeleriYukle = async () => {
     setYukleniyor(true);

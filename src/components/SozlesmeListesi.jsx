@@ -3,6 +3,16 @@ import { createPortal } from 'react-dom';
 import { collection, getDocs, deleteDoc, doc, query, orderBy, updateDoc, addDoc, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import SozlesmeForm from './SozlesmeForm';
+import {
+  formatPara,
+  formatTarih,
+  calculateKalanTutar,
+  STATUS,
+  calculateStatus,
+  isPositiveNumber,
+  paginateData,
+  calculateTotalPages, getStatusBadge
+} from '../utils';
 
 const SozlesmeListesi = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
   const [taksitler, setTaksitler] = useState([]);
@@ -31,27 +41,6 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
   const [odemeYukleniyor, setOdemeYukleniyor] = useState(false);
   const [silmeYukleniyor, setSilmeYukleniyor] = useState(null);
 
-  const formatTarih = (timestamp) => {
-    if (!timestamp) return '-';
-    try {
-      const tarih = timestamp.toDate();
-      return tarih.toLocaleDateString('tr-TR', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-    } catch (error) {
-      console.error('Tarih formatlama hatası:', error);
-      return '-';
-    }
-  };
-
-  const formatPara = (tutar) => {
-    return new Intl.NumberFormat('tr-TR', {
-      style: 'currency',
-      currency: 'TRY'
-    }).format(tutar);
-  };
 
   const sozlesmeleriGrupla = () => {
     const gruplananlar = {};
@@ -77,7 +66,7 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
       gruplananlar[key].taksitler.push(taksit);
       gruplananlar[key].toplam_tutar += taksit.taksit_tutari;
 
-      if (taksit.status === 0) {
+      if (taksit.status === STATUS.ODENDI) {
         gruplananlar[key].odenen_taksit++;
       } else {
         gruplananlar[key].aktif_taksit++;
@@ -122,10 +111,8 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
     );
   });
 
-  const toplamSayfa = Math.ceil(filtrelenmisVeriler.length / sayfaBasinaKayit);
-  const baslangicIndex = (mevcutSayfa - 1) * sayfaBasinaKayit;
-  const bitisIndex = baslangicIndex + sayfaBasinaKayit;
-  const mevcutVeriler = filtrelenmisVeriler.slice(baslangicIndex, bitisIndex);
+  const toplamSayfa = calculateTotalPages(filtrelenmisVeriler.length, sayfaBasinaKayit);
+  const mevcutVeriler = paginateData(filtrelenmisVeriler, mevcutSayfa, sayfaBasinaKayit);
 
   const taksitleriYukle = async () => {
     setYukleniyor(true);
@@ -178,7 +165,7 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
     try {
       const tutarSayi = parseFloat(yeniTutar);
 
-      if (isNaN(tutarSayi) || tutarSayi <= 0) {
+      if (!isPositiveNumber(tutarSayi)) {
         alert('Lütfen geçerli bir tutar girin');
         return;
       }
@@ -372,16 +359,14 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
     try {
       const odemeTutariSayi = parseFloat(odemeTutari);
 
-      if (isNaN(odemeTutariSayi) || odemeTutariSayi <= 0) {
+      if (!isPositiveNumber(odemeTutariSayi)) {
         alert('Lütfen geçerli bir tutar girin');
         return;
       }
 
       const taksitTutari = odemeYapilacakTaksit.taksit_tutari;
       const mevcutOdenen = odemeYapilacakTaksit.odenen_tutar || 0;
-      const kalanTutar = odemeYapilacakTaksit.kalan_tutar !== undefined
-        ? odemeYapilacakTaksit.kalan_tutar
-        : odemeYapilacakTaksit.taksit_tutari;
+      const kalanTutar = calculateKalanTutar(odemeYapilacakTaksit);
 
       if (odemeTutariSayi > taksitTutari) {
         alert(`Ödeme tutarı taksit tutarından (${formatPara(taksitTutari)}) fazla olamaz`);
@@ -396,14 +381,7 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
       const yeniOdenenTutar = mevcutOdenen + odemeTutariSayi;
       const yeniKalanTutar = kalanTutar - odemeTutariSayi;
 
-      let yeniStatus;
-      if (yeniKalanTutar === 0) {
-        yeniStatus = 0;
-      } else if (yeniOdenenTutar > 0 && yeniKalanTutar > 0) {
-        yeniStatus = 2;
-      } else {
-        yeniStatus = 1;
-      }
+      const yeniStatus = calculateStatus(yeniOdenenTutar, yeniKalanTutar);
 
       await updateDoc(doc(db, 'sozlesmeler', odemeYapilacakTaksit.id), {
         odenen_tutar: yeniOdenenTutar,
@@ -801,7 +779,7 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
                 <div className="bg-orange-50 p-4 rounded-lg">
                   <p className="text-sm md:text-[14px] text-gray-600">Toplam Kalan</p>
                   <p className="text-base md:text-[18px] font-bold text-orange-600">
-                    {formatPara(seciliSozlesme.taksitler.reduce((sum, t) => sum + (t.kalan_tutar !== undefined ? t.kalan_tutar : t.taksit_tutari), 0))}
+                    {formatPara(seciliSozlesme.taksitler.reduce((sum, t) => sum + calculateKalanTutar(t), 0))}
                   </p>
                 </div>
               </div>
@@ -981,7 +959,7 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap">
                             <span className="text-sm font-medium text-orange-600">
-                              {formatPara(taksit.kalan_tutar !== undefined ? taksit.kalan_tutar : taksit.taksit_tutari)}
+                              {formatPara(calculateKalanTutar(taksit))}
                             </span>
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap">
@@ -990,21 +968,20 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
                             </span>
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-center">
-                            <span className={`inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full ${
-                              (taksit.status ?? 1) === 0
-                                ? 'bg-green-100 text-green-800'
-                                : (taksit.status ?? 1) === 2
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-blue-100 text-blue-800'
-                            }`}>
-                              {(taksit.status ?? 1) === 0 ? 'Ödendi' : (taksit.status ?? 1) === 2 ? 'Kısmi Ödendi' : 'Ödeme Bekliyor'}
-                            </span>
+                            {(() => {
+                              const { label, color } = getStatusBadge(taksit.status ?? STATUS.ODEME_BEKLIYOR);
+                              return (
+                                <span className={`inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full ${color}`}>
+                                  {label}
+                                </span>
+                              );
+                            })()}
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-center">
                             <div className="flex items-center justify-center gap-2">
                               <button
                                 onClick={() => odemeModalAc(taksit)}
-                                disabled={(taksit.kalan_tutar !== undefined ? taksit.kalan_tutar : taksit.taksit_tutari) <= 0}
+                                disabled={calculateKalanTutar(taksit) <= 0}
                                 className="inline-flex items-center px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
                                 title="Ödeme Yap"
                               >
@@ -1093,7 +1070,7 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
                   <div className="col-span-2">
                     <p className="text-gray-600">Kalan Tutar:</p>
                     <p className="font-bold text-orange-600 text-base md:text-[18px]">
-                      {formatPara(odemeYapilacakTaksit.kalan_tutar !== undefined ? odemeYapilacakTaksit.kalan_tutar : odemeYapilacakTaksit.taksit_tutari)}
+                      {formatPara(calculateKalanTutar(odemeYapilacakTaksit))}
                     </p>
                   </div>
                 </div>
@@ -1113,7 +1090,7 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
                     placeholder="Örn: 500"
                     step="0.01"
                     min="0"
-                    max={odemeYapilacakTaksit.kalan_tutar !== undefined ? odemeYapilacakTaksit.kalan_tutar : odemeYapilacakTaksit.taksit_tutari}
+                    max={calculateKalanTutar(odemeYapilacakTaksit)}
                   />
                 </div>
 

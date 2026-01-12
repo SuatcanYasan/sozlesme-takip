@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { formatPara, calculateKalanTutar, STATUS } from '../utils';
 
 const OdemeGrafigi = ({ yenile }) => {
   const [grafikVerisi, setGrafikVerisi] = useState([]);
@@ -13,26 +14,17 @@ const OdemeGrafigi = ({ yenile }) => {
   const [seciliAyAdi, setSeciliAyAdi] = useState('');
   const [tumVadeler, setTumVadeler] = useState([]);
 
-  const formatPara = (tutar) => {
-    return new Intl.NumberFormat('tr-TR', {
-      style: 'currency',
-      currency: 'TRY',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(tutar);
-  };
-
   const odemeTarihleriniHesapla = (vadeler) => {
     const aylikOdemeler = {};
 
     vadeler.forEach((vade) => {
-      if (!vade.vade_tarihi || vade.status === 0) {
+      if (!vade.vade_tarihi || vade.status === STATUS.ODENDI) {
         return;
       }
 
       try {
         const vadeTarihi = vade.vade_tarihi.toDate();
-        const kalanTutar = parseFloat(vade.kalan_tutar !== undefined ? vade.kalan_tutar : vade.taksit_tutari);
+        const kalanTutar = parseFloat(calculateKalanTutar(vade));
 
         if (kalanTutar <= 0) {
           return;
@@ -113,7 +105,7 @@ const OdemeGrafigi = ({ yenile }) => {
 
     const ayAnahtari = data.ayAnahtari;
     const ayVadeleri = tumVadeler.filter(vade => {
-      if (!vade.vade_tarihi || vade.status === 0) return false;
+      if (!vade.vade_tarihi || vade.status === STATUS.ODENDI) return false;
 
       try {
         const vadeTarihi = vade.vade_tarihi.toDate();
@@ -330,7 +322,7 @@ const OdemeGrafigi = ({ yenile }) => {
                     <div className="bg-purple-50 p-3 rounded-lg">
                       <p className="text-[14px] text-gray-600">Kalan Tutar</p>
                       <p className="text-[18px] font-bold text-purple-600 font-number">
-                        {formatPara(seciliAyVerileri.reduce((sum, v) => sum + (v.kalan_tutar !== undefined ? v.kalan_tutar : 0), 0))}
+                        {formatPara(seciliAyVerileri.reduce((sum, v) => sum + calculateKalanTutar(v), 0))}
                       </p>
                     </div>
                   </div>
@@ -384,7 +376,7 @@ const OdemeGrafigi = ({ yenile }) => {
                               {formatPara(vade.taksit_tutari || 0)}
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap text-sm font-bold text-orange-600 font-number">
-                              {formatPara(vade.kalan_tutar !== undefined ? vade.kalan_tutar : 0)}
+                              {formatPara(calculateKalanTutar(vade))}
                             </td>
                           </tr>
                         ))}

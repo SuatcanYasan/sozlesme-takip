@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { collection, getDocs, query } from 'firebase/firestore';
 import { db } from '../firebase';
-import SozlesmeForm from '../components/SozlesmeForm';
 import SozlesmeListesi from '../components/SozlesmeListesi';
 import OdemeGrafigi from '../components/OdemeGrafigi';
+import { formatPara, calculateKalanTutar, getUniqueValues, STATUS } from '../utils';
 
 const Dashboard = () => {
   const [yenilemeAnahtari, setYenilemeAnahtari] = useState(0);
@@ -24,15 +24,6 @@ const Dashboard = () => {
     istatistikleriYukle();
   };
 
-  const formatPara = (tutar) => {
-    return new Intl.NumberFormat('tr-TR', {
-      style: 'currency',
-      currency: 'TRY',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(tutar);
-  };
-
   const istatistikleriYukle = async () => {
     setYukleniyor(true);
     try {
@@ -47,14 +38,14 @@ const Dashboard = () => {
         });
       });
 
-      const sozlesmeNoları = [...new Set(taksitler.map(t => t.sozlesme_no))];
-      const toplamSozlesme = sozlesmeNoları.length;
+      const sozlesmeNolari = getUniqueValues(taksitler, 'sozlesme_no');
+      const toplamSozlesme = sozlesmeNolari.length;
 
       const toplamGelir = taksitler.reduce((sum, t) => sum + (t.taksit_tutari || 0), 0);
 
       const beklenenOdeme = taksitler.reduce((sum, t) => {
-        if (t.status === 0) return sum;
-        const kalan = t.kalan_tutar !== undefined ? t.kalan_tutar : t.taksit_tutari;
+        if (t.status === STATUS.ODENDI) return sum;
+        const kalan = calculateKalanTutar(t);
         return sum + (kalan || 0);
       }, 0);
 
@@ -62,13 +53,13 @@ const Dashboard = () => {
       bugun.setHours(0, 0, 0, 0);
 
       const gecikenOdeme = taksitler.reduce((sum, t) => {
-        if (!t.vade_tarihi || t.status === 0) return sum;
+        if (!t.vade_tarihi || t.status === STATUS.ODENDI) return sum;
 
         try {
           const vadeTarihi = t.vade_tarihi.toDate();
           vadeTarihi.setHours(0, 0, 0, 0);
 
-          const kalan = t.kalan_tutar !== undefined ? t.kalan_tutar : t.taksit_tutari;
+          const kalan = calculateKalanTutar(t);
 
           if (vadeTarihi < bugun && kalan > 0) {
             return sum + kalan;
