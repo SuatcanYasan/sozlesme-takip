@@ -66,17 +66,17 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
           taksitler: [],
           toplam_tutar: 0,
           aktif_taksit: 0,
-          kapali_taksit: 0
+          odenen_taksit: 0
         };
       }
 
       gruplananlar[key].taksitler.push(taksit);
       gruplananlar[key].toplam_tutar += taksit.taksit_tutari;
 
-      if (taksit.status === 1) {
-        gruplananlar[key].aktif_taksit++;
+      if (taksit.status === 0) {
+        gruplananlar[key].odenen_taksit++;
       } else {
-        gruplananlar[key].kapali_taksit++;
+        gruplananlar[key].aktif_taksit++;
       }
     });
 
@@ -166,22 +166,6 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
     } catch (error) {
       console.error('Sözleşme silinirken hata:', error);
       alert('Sözleşme silinirken bir hata oluştu');
-    }
-  };
-
-  const taksitStatusDegistir = async (taksitId, mevcutStatus) => {
-    try {
-      const yeniStatus = mevcutStatus === 1 ? 0 : 1;
-      await updateDoc(doc(db, 'sozlesmeler', taksitId), {
-        status: yeniStatus
-      });
-
-      setTaksitler(prev => prev.map(t =>
-        t.id === taksitId ? { ...t, status: yeniStatus } : t
-      ));
-    } catch (error) {
-      console.error('Status güncellenirken hata:', error);
-      alert('Status güncellenirken bir hata oluştu');
     }
   };
 
@@ -379,10 +363,16 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
         return;
       }
 
+      const taksitTutari = odemeYapilacakTaksit.taksit_tutari;
       const mevcutOdenen = odemeYapilacakTaksit.odenen_tutar || 0;
       const kalanTutar = odemeYapilacakTaksit.kalan_tutar !== undefined
         ? odemeYapilacakTaksit.kalan_tutar
         : odemeYapilacakTaksit.taksit_tutari;
+
+      if (odemeTutariSayi > taksitTutari) {
+        alert(`Ödeme tutarı taksit tutarından (${formatPara(taksitTutari)}) fazla olamaz`);
+        return;
+      }
 
       if (odemeTutariSayi > kalanTutar) {
         alert(`Ödeme tutarı kalan tutardan (${formatPara(kalanTutar)}) fazla olamaz`);
@@ -392,9 +382,19 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
       const yeniOdenenTutar = mevcutOdenen + odemeTutariSayi;
       const yeniKalanTutar = kalanTutar - odemeTutariSayi;
 
+      let yeniStatus;
+      if (yeniKalanTutar === 0) {
+        yeniStatus = 0;
+      } else if (yeniOdenenTutar > 0 && yeniKalanTutar > 0) {
+        yeniStatus = 2;
+      } else {
+        yeniStatus = 1;
+      }
+
       await updateDoc(doc(db, 'sozlesmeler', odemeYapilacakTaksit.id), {
         odenen_tutar: yeniOdenenTutar,
-        kalan_tutar: yeniKalanTutar
+        kalan_tutar: yeniKalanTutar,
+        status: yeniStatus
       });
 
       const odemeKaydi = {
@@ -411,14 +411,14 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
 
       setTaksitler(prev => prev.map(t =>
         t.id === odemeYapilacakTaksit.id
-          ? { ...t, odenen_tutar: yeniOdenenTutar, kalan_tutar: yeniKalanTutar }
+          ? { ...t, odenen_tutar: yeniOdenenTutar, kalan_tutar: yeniKalanTutar, status: yeniStatus }
           : t
       ));
 
       if (seciliSozlesme && seciliSozlesme.sozlesme_no === odemeYapilacakTaksit.sozlesme_no) {
         const guncelTaksitler = taksitler.map(t =>
           t.id === odemeYapilacakTaksit.id
-            ? { ...t, odenen_tutar: yeniOdenenTutar, kalan_tutar: yeniKalanTutar }
+            ? { ...t, odenen_tutar: yeniOdenenTutar, kalan_tutar: yeniKalanTutar, status: yeniStatus }
             : t
         );
 
@@ -560,8 +560,9 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
                       className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent outline-none"
                     >
                       <option value="">Tümü</option>
-                      <option value="1">Aktif</option>
-                      <option value="0">Kapalı</option>
+                      <option value="1">Ödeme Bekliyor</option>
+                      <option value="2">Kısmi Ödendi</option>
+                      <option value="0">Ödendi</option>
                     </select>
                   </th>
                   <th className="px-2 py-2"></th>
@@ -942,16 +943,15 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
                             </span>
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-center">
-                            <button
-                              onClick={() => taksitStatusDegistir(taksit.id, taksit.status ?? 1)}
-                              className={`inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full transition duration-200 ${
-                                (taksit.status ?? 1) === 1
-                                  ? 'bg-green-100 text-green-800 hover:bg-green-200'
-                                  : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                              }`}
-                            >
-                              {(taksit.status ?? 1) === 1 ? 'Aktif' : 'Kapalı'}
-                            </button>
+                            <span className={`inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full ${
+                              (taksit.status ?? 1) === 0
+                                ? 'bg-green-100 text-green-800'
+                                : (taksit.status ?? 1) === 2
+                                ? 'bg-yellow-100 text-yellow-800'
+                                : 'bg-blue-100 text-blue-800'
+                            }`}>
+                              {(taksit.status ?? 1) === 0 ? 'Ödendi' : (taksit.status ?? 1) === 2 ? 'Kısmi Ödendi' : 'Ödeme Bekliyor'}
+                            </span>
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-center">
                             <div className="flex items-center justify-center gap-2">

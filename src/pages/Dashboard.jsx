@@ -53,6 +53,7 @@ const Dashboard = () => {
       const toplamGelir = taksitler.reduce((sum, t) => sum + (t.taksit_tutari || 0), 0);
 
       const beklenenOdeme = taksitler.reduce((sum, t) => {
+        if (t.status === 0) return sum;
         const kalan = t.kalan_tutar !== undefined ? t.kalan_tutar : t.taksit_tutari;
         return sum + (kalan || 0);
       }, 0);
@@ -61,7 +62,7 @@ const Dashboard = () => {
       bugun.setHours(0, 0, 0, 0);
 
       const gecikenOdeme = taksitler.reduce((sum, t) => {
-        if (!t.vade_tarihi) return sum;
+        if (!t.vade_tarihi || t.status === 0) return sum;
 
         try {
           const vadeTarihi = t.vade_tarihi.toDate();

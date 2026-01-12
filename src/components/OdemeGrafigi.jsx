@@ -26,7 +26,7 @@ const OdemeGrafigi = ({ yenile }) => {
     const aylikOdemeler = {};
 
     vadeler.forEach((vade) => {
-      if (!vade.vade_tarihi || vade.status !== 1) {
+      if (!vade.vade_tarihi || vade.status === 0) {
         return;
       }
 
@@ -113,7 +113,7 @@ const OdemeGrafigi = ({ yenile }) => {
 
     const ayAnahtari = data.ayAnahtari;
     const ayVadeleri = tumVadeler.filter(vade => {
-      if (!vade.vade_tarihi || vade.status !== 1) return false;
+      if (!vade.vade_tarihi || vade.status === 0) return false;
 
       try {
         const vadeTarihi = vade.vade_tarihi.toDate();
