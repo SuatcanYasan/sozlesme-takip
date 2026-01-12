@@ -6,6 +6,17 @@ const SozlesmeListesi = ({ yenile }) => {
   const [sozlesmeler, setSozlesmeler] = useState([]);
   const [yukleniyor, setYukleniyor] = useState(true);
   const [hata, setHata] = useState('');
+  const [mevcutSayfa, setMevcutSayfa] = useState(1);
+  const [sayfaBasinaKayit] = useState(10);
+  const [aramalar, setAramalar] = useState({
+    isim_soyisim: '',
+    sozlesme_no: '',
+    sozlesme_tarihi: '',
+    taksit_sayisi: '',
+    vade_araligi: '',
+    taksit_tutari: '',
+    status: ''
+  });
 
   // Tarihi formatla
   const formatTarih = (timestamp) => {
@@ -31,6 +42,56 @@ const SozlesmeListesi = ({ yenile }) => {
       currency: 'TRY'
     }).format(tutar);
   };
+
+  // Arama değiştir
+  const aramaDegistir = (alan, deger) => {
+    setAramalar(prev => ({
+      ...prev,
+      [alan]: deger
+    }));
+    setMevcutSayfa(1);
+  };
+
+  // Aramaları temizle
+  const aramalariTemizle = () => {
+    setAramalar({
+      isim_soyisim: '',
+      sozlesme_no: '',
+      sozlesme_tarihi: '',
+      taksit_sayisi: '',
+      vade_araligi: '',
+      taksit_tutari: '',
+      status: ''
+    });
+    setMevcutSayfa(1);
+  };
+
+  // Filtrelenmiş veriler
+  const filtrelenmisVeriler = sozlesmeler.filter(sozlesme => {
+    const isimSoyisim = `${sozlesme.isim} ${sozlesme.soyisim}`.toLowerCase();
+    const sozlesmeNo = sozlesme.sozlesme_no?.toLowerCase() || '';
+    const tarih = formatTarih(sozlesme.sozlesme_tarihi).toLowerCase();
+    const taksitSayisi = sozlesme.taksit_sayisi?.toString() || '';
+    const vadeAraligi = sozlesme.vade_araligi?.toString() || '';
+    const taksitTutari = (sozlesme.taksit_tutari || sozlesme.aylik_tutar)?.toString() || '';
+    const status = (sozlesme.status ?? 1).toString();
+
+    return (
+      isimSoyisim.includes(aramalar.isim_soyisim.toLowerCase()) &&
+      sozlesmeNo.includes(aramalar.sozlesme_no.toLowerCase()) &&
+      tarih.includes(aramalar.sozlesme_tarihi.toLowerCase()) &&
+      taksitSayisi.includes(aramalar.taksit_sayisi) &&
+      vadeAraligi.includes(aramalar.vade_araligi) &&
+      taksitTutari.includes(aramalar.taksit_tutari) &&
+      (aramalar.status === '' || status === aramalar.status)
+    );
+  });
+
+  // Pagination hesaplamaları
+  const toplamSayfa = Math.ceil(filtrelenmisVeriler.length / sayfaBasinaKayit);
+  const baslangicIndex = (mevcutSayfa - 1) * sayfaBasinaKayit;
+  const bitisIndex = baslangicIndex + sayfaBasinaKayit;
+  const mevcutVeriler = filtrelenmisVeriler.slice(baslangicIndex, bitisIndex);
 
   // Sözleşmeleri yükle
   const sozlesmeleriYukle = async () => {
@@ -121,12 +182,24 @@ const SozlesmeListesi = ({ yenile }) => {
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-200">
-        <h2 className="text-2xl font-bold text-gray-800">
-          Sözleşme Listesi
-        </h2>
-        <p className="text-gray-600 mt-1">
-          Toplam {sozlesmeler.length} sözleşme
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800">
+              Sözleşme Listesi
+            </h2>
+            <p className="text-gray-600 mt-1">
+              Toplam {sozlesmeler.length} sözleşme • {filtrelenmisVeriler.length} sonuç gösteriliyor
+            </p>
+          </div>
+          {(Object.values(aramalar).some(v => v !== '')) && (
+            <button
+              onClick={aramalariTemizle}
+              className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium rounded-lg transition duration-200"
+            >
+              Aramaları Temizle
+            </button>
+          )}
+        </div>
       </div>
 
       {sozlesmeler.length === 0 ? (
@@ -170,9 +243,78 @@ const SozlesmeListesi = ({ yenile }) => {
                   İşlemler
                 </th>
               </tr>
+              <tr className="bg-gray-100">
+                <th className="px-2 py-2">
+                  <input
+                    type="text"
+                    placeholder="İsim/Soyisim Ara..."
+                    value={aramalar.isim_soyisim}
+                    onChange={(e) => aramaDegistir('isim_soyisim', e.target.value)}
+                    className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent outline-none"
+                  />
+                </th>
+                <th className="px-2 py-2">
+                  <input
+                    type="text"
+                    placeholder="Sözleşme No..."
+                    value={aramalar.sozlesme_no}
+                    onChange={(e) => aramaDegistir('sozlesme_no', e.target.value)}
+                    className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent outline-none"
+                  />
+                </th>
+                <th className="px-2 py-2">
+                  <input
+                    type="text"
+                    placeholder="Tarih Ara..."
+                    value={aramalar.sozlesme_tarihi}
+                    onChange={(e) => aramaDegistir('sozlesme_tarihi', e.target.value)}
+                    className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent outline-none"
+                  />
+                </th>
+                <th className="px-2 py-2">
+                  <input
+                    type="text"
+                    placeholder="Taksit..."
+                    value={aramalar.taksit_sayisi}
+                    onChange={(e) => aramaDegistir('taksit_sayisi', e.target.value)}
+                    className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent outline-none"
+                  />
+                </th>
+                <th className="px-2 py-2">
+                  <input
+                    type="text"
+                    placeholder="Vade..."
+                    value={aramalar.vade_araligi}
+                    onChange={(e) => aramaDegistir('vade_araligi', e.target.value)}
+                    className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent outline-none"
+                  />
+                </th>
+                <th className="px-2 py-2">
+                  <input
+                    type="text"
+                    placeholder="Tutar..."
+                    value={aramalar.taksit_tutari}
+                    onChange={(e) => aramaDegistir('taksit_tutari', e.target.value)}
+                    className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent outline-none"
+                  />
+                </th>
+                <th className="px-2 py-2"></th>
+                <th className="px-2 py-2">
+                  <select
+                    value={aramalar.status}
+                    onChange={(e) => aramaDegistir('status', e.target.value)}
+                    className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent outline-none"
+                  >
+                    <option value="">Tümü</option>
+                    <option value="1">Aktif</option>
+                    <option value="0">Kapalı</option>
+                  </select>
+                </th>
+                <th className="px-2 py-2"></th>
+              </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {sozlesmeler.map((sozlesme) => (
+              {mevcutVeriler.map((sozlesme) => (
                 <tr key={sozlesme.id} className="hover:bg-gray-50 transition">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
@@ -247,12 +389,87 @@ const SozlesmeListesi = ({ yenile }) => {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                       </svg>
                       Sil
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+
+        {filtrelenmisVeriler.length > 0 && toplamSayfa > 1 && (
+            <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-gray-700">
+                  <span className="font-medium">{baslangicIndex + 1}</span>
+                  {' '}-{' '}
+                  <span className="font-medium">{Math.min(bitisIndex, filtrelenmisVeriler.length)}</span>
+                  {' '}arası gösteriliyor (Toplam{' '}
+                  <span className="font-medium">{filtrelenmisVeriler.length}</span>
+                  {' '}kayıt)
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => setMevcutSayfa(1)}
+                    disabled={mevcutSayfa === 1}
+                    className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  >
+                    İlk
+                  </button>
+
+                  <button
+                    onClick={() => setMevcutSayfa(prev => Math.max(prev - 1, 1))}
+                    disabled={mevcutSayfa === 1}
+                    className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  >
+                    Önceki
+                  </button>
+
+                  <div className="flex items-center space-x-1">
+                    {Array.from({ length: toplamSayfa }, (_, i) => i + 1)
+                      .filter(sayfa => {
+                        if (toplamSayfa <= 7) return true;
+                        if (sayfa === 1 || sayfa === toplamSayfa) return true;
+                        return sayfa >= mevcutSayfa - 1 && sayfa <= mevcutSayfa + 1;
+                      })
+                      .map((sayfa, index, array) => (
+                        <React.Fragment key={sayfa}>
+                          {index > 0 && array[index - 1] !== sayfa - 1 && (
+                            <span className="px-2 text-gray-500">...</span>
+                          )}
+                          <button
+                            onClick={() => setMevcutSayfa(sayfa)}
+                            className={`px-3 py-1 text-sm font-medium rounded-md transition ${
+                              mevcutSayfa === sayfa
+                                ? 'bg-blue-600 text-white'
+                                : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                            }`}
+                          >
+                            {sayfa}
+                          </button>
+                        </React.Fragment>
+                      ))}
+                  </div>
+
+                  <button
+                    onClick={() => setMevcutSayfa(prev => Math.min(prev + 1, toplamSayfa))}
+                    disabled={mevcutSayfa === toplamSayfa}
+                    className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  >
+                    Sonraki
+                  </button>
+
+                  <button
+                    onClick={() => setMevcutSayfa(toplamSayfa)}
+                    disabled={mevcutSayfa === toplamSayfa}
+                    className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                  >
+                    Son
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
