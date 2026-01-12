@@ -407,9 +407,9 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi }) => {
             <div className="flex items-center gap-2 md:gap-3">
               <button
                 onClick={() => setFormModalAcik(true)}
-                className="flex items-center gap-2 px-3 md:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm md:text-base font-medium rounded-lg transition duration-200 shadow-sm"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-md transition duration-200 shadow-sm"
               >
-                <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
                 <span className="hidden sm:inline">Yeni Sözleşme Ekle</span>
