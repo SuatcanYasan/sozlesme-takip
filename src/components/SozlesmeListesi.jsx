@@ -19,6 +19,8 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi }) => {
   const [modalAcik, setModalAcik] = useState(false);
   const [duzenlenenTaksit, setDuzenlenenTaksit] = useState(null);
   const [geciciTutar, setGeciciTutar] = useState('');
+  const [duzenlenenVadeTarihi, setDuzenlenenVadeTarihi] = useState(null);
+  const [geciciVadeTarihi, setGeciciVadeTarihi] = useState('');
   const [odemeModalAcik, setOdemeModalAcik] = useState(false);
   const [odemeYapilacakTaksit, setOdemeYapilacakTaksit] = useState(null);
   const [odemeTutari, setOdemeTutari] = useState('');
@@ -262,6 +264,8 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi }) => {
     setSeciliSozlesme(null);
     setDuzenlenenTaksit(null);
     setGeciciTutar('');
+    setDuzenlenenVadeTarihi(null);
+    setGeciciVadeTarihi('');
   };
 
   const tutarDuzenlemeyeBasla = (taksitId, mevcutTutar) => {
@@ -278,6 +282,71 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi }) => {
     await taksitTutariGuncelle(taksitId, geciciTutar, sozlesmeNo);
     setDuzenlenenTaksit(null);
     setGeciciTutar('');
+  };
+
+  const vadeTarihiDuzenlemeyeBasla = (taksitId, mevcutVadeTarihi) => {
+    setDuzenlenenVadeTarihi(taksitId);
+    if (mevcutVadeTarihi) {
+      try {
+        const tarih = mevcutVadeTarihi.toDate();
+        const yil = tarih.getFullYear();
+        const ay = String(tarih.getMonth() + 1).padStart(2, '0');
+        const gun = String(tarih.getDate()).padStart(2, '0');
+        setGeciciVadeTarihi(`${yil}-${ay}-${gun}`);
+      } catch (error) {
+        console.error('Tarih dönüştürme hatası:', error);
+        setGeciciVadeTarihi('');
+      }
+    }
+  };
+
+  const vadeTarihiDuzenlemeIptal = () => {
+    setDuzenlenenVadeTarihi(null);
+    setGeciciVadeTarihi('');
+  };
+
+  const vadeTarihiGuncelle = async (taksitId, yeniTarih, sozlesmeNo) => {
+    if (!yeniTarih) {
+      alert('Lütfen geçerli bir tarih girin');
+      return;
+    }
+
+    try {
+      const tarihObj = new Date(yeniTarih);
+      const taksitRef = doc(db, 'sozlesmeler', taksitId);
+
+      await updateDoc(taksitRef, {
+        vade_tarihi: Timestamp.fromDate(tarihObj)
+      });
+
+      setTaksitler(prev => prev.map(t =>
+        t.id === taksitId ? { ...t, vade_tarihi: Timestamp.fromDate(tarihObj) } : t
+      ));
+
+      if (seciliSozlesme && seciliSozlesme.sozlesme_no === sozlesmeNo) {
+        const guncelTaksitler = taksitler.map(t =>
+          t.id === taksitId ? { ...t, vade_tarihi: Timestamp.fromDate(tarihObj) } : t
+        );
+
+        const sozlesmeninTaksitleri = guncelTaksitler.filter(t => t.sozlesme_no === sozlesmeNo);
+
+        setSeciliSozlesme(prev => ({
+          ...prev,
+          taksitler: sozlesmeninTaksitleri
+        }));
+      }
+
+      alert('Vade tarihi başarıyla güncellendi!');
+    } catch (error) {
+      console.error('Vade tarihi güncellenirken hata:', error);
+      alert('Vade tarihi güncellenirken bir hata oluştu');
+    }
+  };
+
+  const vadeTarihiKaydet = async (taksitId, sozlesmeNo) => {
+    await vadeTarihiGuncelle(taksitId, geciciVadeTarihi, sozlesmeNo);
+    setDuzenlenenVadeTarihi(null);
+    setGeciciVadeTarihi('');
   };
 
   const odemeModalAc = (taksit) => {
@@ -738,7 +807,57 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi }) => {
                             </span>
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
-                            {formatTarih(taksit.vade_tarihi)}
+                            {duzenlenenVadeTarihi === taksit.id ? (
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="date"
+                                  value={geciciVadeTarihi}
+                                  onChange={(e) => setGeciciVadeTarihi(e.target.value)}
+                                  className="w-36 px-2 py-1 text-sm border border-blue-300 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                                  autoFocus
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      vadeTarihiKaydet(taksit.id, taksit.sozlesme_no);
+                                    } else if (e.key === 'Escape') {
+                                      vadeTarihiDuzenlemeIptal();
+                                    }
+                                  }}
+                                />
+                                <button
+                                  onClick={() => vadeTarihiKaydet(taksit.id, taksit.sozlesme_no)}
+                                  className="p-1 bg-green-600 hover:bg-green-700 text-white rounded transition"
+                                  title="Kaydet"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                </button>
+                                <button
+                                  onClick={vadeTarihiDuzenlemeIptal}
+                                  className="p-1 bg-gray-600 hover:bg-gray-700 text-white rounded transition"
+                                  title="İptal"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                </button>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <span>
+                                  {formatTarih(taksit.vade_tarihi)}
+                                </span>
+                                <button
+                                  onClick={() => vadeTarihiDuzenlemeyeBasla(taksit.id, taksit.vade_tarihi)}
+                                  className="p-1 text-blue-600 hover:text-blue-800 transition"
+                                  title="Vade Tarihini Düzenle"
+                                >
+                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                  </svg>
+                                </button>
+                              </div>
+                            )}
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap">
                             {duzenlenenTaksit === taksit.id ? (
