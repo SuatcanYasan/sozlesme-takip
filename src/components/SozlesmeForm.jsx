@@ -8,6 +8,7 @@ const SozlesmeForm = ({ onSozlesmeEklendi }) => {
     soyisim: '',
     sozlesme_no: '',
     sozlesme_tarihi: '',
+    vade_baslangic_tarihi: '',
     taksit_sayisi: '',
     taksit_tutari: '',
     vade_araligi: ''
@@ -15,6 +16,7 @@ const SozlesmeForm = ({ onSozlesmeEklendi }) => {
   const [yukleniyor, setYukleniyor] = useState(false);
   const [hata, setHata] = useState('');
   const [basari, setBasari] = useState(false);
+  const [basariMesaji, setBasariMesaji] = useState('');
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -31,50 +33,69 @@ const SozlesmeForm = ({ onSozlesmeEklendi }) => {
     setYukleniyor(true);
 
     try {
-      // Form validasyonu
       if (!formData.isim || !formData.soyisim || !formData.sozlesme_no ||
-          !formData.sozlesme_tarihi || !formData.taksit_sayisi ||
-          !formData.taksit_tutari || !formData.vade_araligi) {
+          !formData.sozlesme_tarihi || !formData.vade_baslangic_tarihi ||
+          !formData.taksit_sayisi || !formData.taksit_tutari || !formData.vade_araligi) {
         throw new Error('Lütfen tüm alanları doldurun');
       }
 
-      // Tarihi Timestamp'e çevir
-      const tarih = new Date(formData.sozlesme_tarihi);
-      const timestamp = Timestamp.fromDate(tarih);
+      const sozlesmeTarihi = new Date(formData.sozlesme_tarihi);
+      const vadeBaslangicTarihi = new Date(formData.vade_baslangic_tarihi);
+      const taksitSayisi = Number(formData.taksit_sayisi);
+      const taksitTutari = Number(formData.taksit_tutari);
+      const vadeAraligi = Number(formData.vade_araligi);
 
-      // Firestore'a kaydet
-      await addDoc(collection(db, 'sozlesmeler'), {
-        isim: formData.isim,
-        soyisim: formData.soyisim,
-        sozlesme_no: formData.sozlesme_no,
-        sozlesme_tarihi: timestamp,
-        taksit_sayisi: Number(formData.taksit_sayisi),
-        taksit_tutari: Number(formData.taksit_tutari),
-        vade_araligi: Number(formData.vade_araligi),
-        status: 1,
-        olusturma_tarihi: Timestamp.now()
-      });
+      const taksitKayitlari = [];
+      for (let i = 0; i < taksitSayisi; i++) {
+        const vadeTarihi = new Date(vadeBaslangicTarihi);
+        vadeTarihi.setDate(vadeTarihi.getDate() + (vadeAraligi * i));
 
-      // Formu temizle
+        const taksitData = {
+          isim: formData.isim,
+          soyisim: formData.soyisim,
+          sozlesme_no: formData.sozlesme_no,
+          sozlesme_tarihi: Timestamp.fromDate(sozlesmeTarihi),
+          vade_baslangic_tarihi: Timestamp.fromDate(vadeBaslangicTarihi),
+          vade_tarihi: Timestamp.fromDate(vadeTarihi),
+          taksit_sira: i + 1,
+          toplam_taksit: taksitSayisi,
+          taksit_tutari: taksitTutari,
+          vade_araligi: vadeAraligi,
+          status: 1,
+          olusturma_tarihi: Timestamp.now()
+        };
+
+        taksitKayitlari.push(taksitData);
+      }
+
+      const kayitPromises = taksitKayitlari.map(taksit =>
+        addDoc(collection(db, 'sozlesmeler'), taksit)
+      );
+
+      await Promise.all(kayitPromises);
+
       setFormData({
         isim: '',
         soyisim: '',
         sozlesme_no: '',
         sozlesme_tarihi: '',
+        vade_baslangic_tarihi: '',
         taksit_sayisi: '',
         taksit_tutari: '',
         vade_araligi: ''
       });
 
       setBasari(true);
+      setBasariMesaji(`${taksitSayisi} adet taksit başarıyla eklendi!`);
 
-      // Parent component'e bildir
       if (onSozlesmeEklendi) {
         onSozlesmeEklendi();
       }
 
-      // Başarı mesajını 3 saniye sonra kaldır
-      setTimeout(() => setBasari(false), 3000);
+      setTimeout(() => {
+        setBasari(false);
+        setBasariMesaji('');
+      }, 3000);
 
     } catch (error) {
       console.error('Sözleşme eklenirken hata:', error);
@@ -159,6 +180,22 @@ const SozlesmeForm = ({ onSozlesmeEklendi }) => {
               />
             </div>
 
+            {/* Vade Başlangıç Tarihi */}
+            <div>
+              <label htmlFor="vade_baslangic_tarihi" className="block text-sm font-medium text-gray-700 mb-2">
+                Vade Başlangıç Tarihi *
+              </label>
+              <input
+                  type="date"
+                  id="vade_baslangic_tarihi"
+                  name="vade_baslangic_tarihi"
+                  value={formData.vade_baslangic_tarihi}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  required
+              />
+            </div>
+
             {/* Taksit Sayısı */}
             <div>
               <label htmlFor="taksit_sayisi" className="block text-sm font-medium text-gray-700 mb-2">
@@ -223,7 +260,7 @@ const SozlesmeForm = ({ onSozlesmeEklendi }) => {
 
           {basari && (
               <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg">
-                ✓ Sözleşme başarıyla eklendi!
+                ✓ {basariMesaji}
               </div>
           )}
 

@@ -81,16 +81,16 @@ const OdemeGrafigi = ({ yenile }) => {
 
     try {
       const querySnapshot = await getDocs(collection(db, 'sozlesmeler'));
-      const sozlesmeListesi = [];
+      const taksitListesi = [];
 
       querySnapshot.forEach((doc) => {
-        sozlesmeListesi.push({
+        taksitListesi.push({
           id: doc.id,
           ...doc.data()
         });
       });
 
-      const grafikVerisi = odemeTarihleriniHesapla(sozlesmeListesi);
+      const grafikVerisi = odemeTarihleriniHesapla(taksitListesi);
       setGrafikVerisi(grafikVerisi);
     } catch (error) {
       console.error('Veriler yüklenirken hata:', error);

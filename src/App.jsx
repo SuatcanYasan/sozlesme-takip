@@ -6,7 +6,6 @@ import OdemeGrafigi from "./components/OdemeGrafigi";
 function App() {
   const [yenilemeAnahtari, setYenilemeAnahtari] = useState(0);
 
-  // Yeni sözleşme eklendiğinde listeyi yenile
   const handleSozlesmeEklendi = () => {
     setYenilemeAnahtari(prev => prev + 1);
   };

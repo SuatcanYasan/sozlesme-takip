@@ -18,7 +18,6 @@ const SozlesmeListesi = ({ yenile }) => {
     status: ''
   });
 
-  // Tarihi formatla
   const formatTarih = (timestamp) => {
     if (!timestamp) return '-';
 
@@ -35,7 +34,6 @@ const SozlesmeListesi = ({ yenile }) => {
     }
   };
 
-  // Para birimi formatla
   const formatPara = (tutar) => {
     return new Intl.NumberFormat('tr-TR', {
       style: 'currency',
@@ -43,7 +41,6 @@ const SozlesmeListesi = ({ yenile }) => {
     }).format(tutar);
   };
 
-  // Arama değiştir
   const aramaDegistir = (alan, deger) => {
     setAramalar(prev => ({
       ...prev,
@@ -52,7 +49,6 @@ const SozlesmeListesi = ({ yenile }) => {
     setMevcutSayfa(1);
   };
 
-  // Aramaları temizle
   const aramalariTemizle = () => {
     setAramalar({
       isim_soyisim: '',
@@ -66,12 +62,11 @@ const SozlesmeListesi = ({ yenile }) => {
     setMevcutSayfa(1);
   };
 
-  // Filtrelenmiş veriler
   const filtrelenmisVeriler = sozlesmeler.filter(sozlesme => {
     const isimSoyisim = `${sozlesme.isim} ${sozlesme.soyisim}`.toLowerCase();
     const sozlesmeNo = sozlesme.sozlesme_no?.toLowerCase() || '';
-    const tarih = formatTarih(sozlesme.sozlesme_tarihi).toLowerCase();
-    const taksitSayisi = sozlesme.taksit_sayisi?.toString() || '';
+    const vadeTarihi = formatTarih(sozlesme.vade_tarihi).toLowerCase();
+    const taksitSira = sozlesme.taksit_sira?.toString() || '';
     const vadeAraligi = sozlesme.vade_araligi?.toString() || '';
     const taksitTutari = (sozlesme.taksit_tutari || sozlesme.aylik_tutar)?.toString() || '';
     const status = (sozlesme.status ?? 1).toString();
@@ -79,21 +74,19 @@ const SozlesmeListesi = ({ yenile }) => {
     return (
       isimSoyisim.includes(aramalar.isim_soyisim.toLowerCase()) &&
       sozlesmeNo.includes(aramalar.sozlesme_no.toLowerCase()) &&
-      tarih.includes(aramalar.sozlesme_tarihi.toLowerCase()) &&
-      taksitSayisi.includes(aramalar.taksit_sayisi) &&
+      vadeTarihi.includes(aramalar.sozlesme_tarihi.toLowerCase()) &&
+      taksitSira.includes(aramalar.taksit_sayisi) &&
       vadeAraligi.includes(aramalar.vade_araligi) &&
       taksitTutari.includes(aramalar.taksit_tutari) &&
       (aramalar.status === '' || status === aramalar.status)
     );
   });
 
-  // Pagination hesaplamaları
   const toplamSayfa = Math.ceil(filtrelenmisVeriler.length / sayfaBasinaKayit);
   const baslangicIndex = (mevcutSayfa - 1) * sayfaBasinaKayit;
   const bitisIndex = baslangicIndex + sayfaBasinaKayit;
   const mevcutVeriler = filtrelenmisVeriler.slice(baslangicIndex, bitisIndex);
 
-  // Sözleşmeleri yükle
   const sozlesmeleriYukle = async () => {
     setYukleniyor(true);
     setHata('');
@@ -119,7 +112,6 @@ const SozlesmeListesi = ({ yenile }) => {
     }
   };
 
-  // Sözleşme sil
   const sozlesmeSil = async (id, sozlesmeNo) => {
     if (!window.confirm(`"${sozlesmeNo}" numaralı sözleşmeyi silmek istediğinize emin misiniz?`)) {
       return;
@@ -127,7 +119,6 @@ const SozlesmeListesi = ({ yenile }) => {
 
     try {
       await deleteDoc(doc(db, 'sozlesmeler', id));
-      // Listeyi güncelle
       setSozlesmeler(prev => prev.filter(s => s.id !== id));
       alert('Sözleşme başarıyla silindi!');
     } catch (error) {
@@ -136,7 +127,6 @@ const SozlesmeListesi = ({ yenile }) => {
     }
   };
 
-  // Durum değiştir
   const statusDegistir = async (id, mevcutStatus) => {
     try {
       const yeniStatus = mevcutStatus === 1 ? 0 : 1;
@@ -153,7 +143,6 @@ const SozlesmeListesi = ({ yenile }) => {
     }
   };
 
-  // Component yüklendiğinde ve yenile değiştiğinde sözleşmeleri yükle
   useEffect(() => {
     sozlesmeleriYukle();
   }, [yenile]);
@@ -222,19 +211,16 @@ const SozlesmeListesi = ({ yenile }) => {
                   Sözleşme No
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Sözleşme Tarihi
+                  Vade Tarihi
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Taksit Sayısı
+                  Taksit Sırası
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Vade Aralığı
                 </th>
                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Taksit Tutarı
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Toplam Tutar
                 </th>
                 <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Durum
@@ -265,7 +251,7 @@ const SozlesmeListesi = ({ yenile }) => {
                 <th className="px-2 py-2">
                   <input
                     type="text"
-                    placeholder="Tarih Ara..."
+                    placeholder="Vade Tarihi..."
                     value={aramalar.sozlesme_tarihi}
                     onChange={(e) => aramaDegistir('sozlesme_tarihi', e.target.value)}
                     className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent outline-none"
@@ -274,7 +260,7 @@ const SozlesmeListesi = ({ yenile }) => {
                 <th className="px-2 py-2">
                   <input
                     type="text"
-                    placeholder="Taksit..."
+                    placeholder="Taksit Sırası..."
                     value={aramalar.taksit_sayisi}
                     onChange={(e) => aramaDegistir('taksit_sayisi', e.target.value)}
                     className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent outline-none"
@@ -298,7 +284,6 @@ const SozlesmeListesi = ({ yenile }) => {
                     className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-transparent outline-none"
                   />
                 </th>
-                <th className="px-2 py-2"></th>
                 <th className="px-2 py-2">
                   <select
                     value={aramalar.status}
@@ -330,12 +315,12 @@ const SozlesmeListesi = ({ yenile }) => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-600">
-                      {formatTarih(sozlesme.sozlesme_tarihi)}
+                      {formatTarih(sozlesme.vade_tarihi)}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                      {sozlesme.taksit_sayisi} Adet
+                      {sozlesme.taksit_sira} / {sozlesme.toplam_taksit}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -346,11 +331,6 @@ const SozlesmeListesi = ({ yenile }) => {
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900">
                       {formatPara(sozlesme.taksit_tutari || sozlesme.aylik_tutar)}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-bold text-green-600">
-                      {formatPara((sozlesme.taksit_tutari || sozlesme.aylik_tutar) * sozlesme.taksit_sayisi)}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-center">
