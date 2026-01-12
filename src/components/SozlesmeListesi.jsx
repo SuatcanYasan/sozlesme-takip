@@ -4,7 +4,7 @@ import { collection, getDocs, deleteDoc, doc, query, orderBy, updateDoc, addDoc,
 import { db } from '../firebase';
 import SozlesmeForm from './SozlesmeForm';
 
-const SozlesmeListesi = ({ yenile, onSozlesmeEklendi }) => {
+const SozlesmeListesi = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
   const [taksitler, setTaksitler] = useState([]);
   const [yukleniyor, setYukleniyor] = useState(true);
   const [hata, setHata] = useState('');
@@ -380,7 +380,9 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi }) => {
       }
 
       const mevcutOdenen = odemeYapilacakTaksit.odenen_tutar || 0;
-      const kalanTutar = odemeYapilacakTaksit.kalan_tutar || odemeYapilacakTaksit.taksit_tutari;
+      const kalanTutar = odemeYapilacakTaksit.kalan_tutar !== undefined
+        ? odemeYapilacakTaksit.kalan_tutar
+        : odemeYapilacakTaksit.taksit_tutari;
 
       if (odemeTutariSayi > kalanTutar) {
         alert(`Ödeme tutarı kalan tutardan (${formatPara(kalanTutar)}) fazla olamaz`);
@@ -430,6 +432,10 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi }) => {
 
       alert('Ödeme başarıyla kaydedildi!');
       odemeModalKapat();
+
+      if (onOdemeYapildi) {
+        onOdemeYapildi();
+      }
     } catch (error) {
       console.error('Ödeme kaydedilirken hata:', error);
       alert('Ödeme kaydedilirken bir hata oluştu');
@@ -763,7 +769,7 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi }) => {
                 <div className="bg-orange-50 p-4 rounded-lg">
                   <p className="text-sm md:text-[14px] text-gray-600">Toplam Kalan</p>
                   <p className="text-base md:text-[18px] font-bold text-orange-600">
-                    {formatPara(seciliSozlesme.taksitler.reduce((sum, t) => sum + (t.kalan_tutar || t.taksit_tutari), 0))}
+                    {formatPara(seciliSozlesme.taksitler.reduce((sum, t) => sum + (t.kalan_tutar !== undefined ? t.kalan_tutar : t.taksit_tutari), 0))}
                   </p>
                 </div>
               </div>
@@ -927,7 +933,7 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi }) => {
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap">
                             <span className="text-sm font-medium text-orange-600">
-                              {formatPara(taksit.kalan_tutar || taksit.taksit_tutari)}
+                              {formatPara(taksit.kalan_tutar !== undefined ? taksit.kalan_tutar : taksit.taksit_tutari)}
                             </span>
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap">
@@ -951,7 +957,7 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi }) => {
                             <div className="flex items-center justify-center gap-2">
                               <button
                                 onClick={() => odemeModalAc(taksit)}
-                                disabled={(taksit.kalan_tutar || taksit.taksit_tutari) <= 0}
+                                disabled={(taksit.kalan_tutar !== undefined ? taksit.kalan_tutar : taksit.taksit_tutari) <= 0}
                                 className="inline-flex items-center px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
                                 title="Ödeme Yap"
                               >
@@ -1032,7 +1038,7 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi }) => {
                   <div className="col-span-2">
                     <p className="text-gray-600">Kalan Tutar:</p>
                     <p className="font-bold text-orange-600 text-base md:text-[18px]">
-                      {formatPara(odemeYapilacakTaksit.kalan_tutar || odemeYapilacakTaksit.taksit_tutari)}
+                      {formatPara(odemeYapilacakTaksit.kalan_tutar !== undefined ? odemeYapilacakTaksit.kalan_tutar : odemeYapilacakTaksit.taksit_tutari)}
                     </p>
                   </div>
                 </div>
@@ -1052,7 +1058,7 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi }) => {
                     placeholder="Örn: 500"
                     step="0.01"
                     min="0"
-                    max={odemeYapilacakTaksit.kalan_tutar || odemeYapilacakTaksit.taksit_tutari}
+                    max={odemeYapilacakTaksit.kalan_tutar !== undefined ? odemeYapilacakTaksit.kalan_tutar : odemeYapilacakTaksit.taksit_tutari}
                   />
                 </div>
 

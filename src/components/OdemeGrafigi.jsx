@@ -26,13 +26,17 @@ const OdemeGrafigi = ({ yenile }) => {
     const aylikOdemeler = {};
 
     vadeler.forEach((vade) => {
-      if (!vade.vade_tarihi || !vade.taksit_tutari || vade.status !== 1) {
+      if (!vade.vade_tarihi || vade.status !== 1) {
         return;
       }
 
       try {
         const vadeTarihi = vade.vade_tarihi.toDate();
-        const tutar = parseFloat(vade.taksit_tutari);
+        const kalanTutar = parseFloat(vade.kalan_tutar !== undefined ? vade.kalan_tutar : vade.taksit_tutari);
+
+        if (kalanTutar <= 0) {
+          return;
+        }
 
         const yil = vadeTarihi.getFullYear();
         const ay = vadeTarihi.getMonth() + 1;
@@ -52,7 +56,7 @@ const OdemeGrafigi = ({ yenile }) => {
           };
         }
 
-        aylikOdemeler[ayAnahtari].tutar += tutar;
+        aylikOdemeler[ayAnahtari].tutar += kalanTutar;
         aylikOdemeler[ayAnahtari].adet += 1;
       } catch (error) {
         console.error('Ödeme tarihi hesaplama hatası:', error, vade);
@@ -89,13 +93,8 @@ const OdemeGrafigi = ({ yenile }) => {
         });
       });
 
-      console.log('Toplam vade sayısı:', vadeListesi.length);
-      console.log('Örnek vade verisi:', vadeListesi[0]);
-      console.log('Status 1 olan vadeler:', vadeListesi.filter(v => v.status === 1).length);
-
       setTumVadeler(vadeListesi);
       const grafikVerisi = odemeTarihleriniHesapla(vadeListesi);
-      console.log('Grafik verisi:', grafikVerisi);
       setGrafikVerisi(grafikVerisi);
     } catch (error) {
       console.error('Veriler yüklenirken hata:', error);
@@ -331,7 +330,7 @@ const OdemeGrafigi = ({ yenile }) => {
                     <div className="bg-purple-50 p-3 rounded-lg">
                       <p className="text-[14px] text-gray-600">Kalan Tutar</p>
                       <p className="text-[18px] font-bold text-purple-600 font-number">
-                        {formatPara(seciliAyVerileri.reduce((sum, v) => sum + (v.kalan_tutar || 0), 0))}
+                        {formatPara(seciliAyVerileri.reduce((sum, v) => sum + (v.kalan_tutar !== undefined ? v.kalan_tutar : 0), 0))}
                       </p>
                     </div>
                   </div>
@@ -385,7 +384,7 @@ const OdemeGrafigi = ({ yenile }) => {
                               {formatPara(vade.taksit_tutari || 0)}
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap text-sm font-bold text-orange-600 font-number">
-                              {formatPara(vade.kalan_tutar || 0)}
+                              {formatPara(vade.kalan_tutar !== undefined ? vade.kalan_tutar : 0)}
                             </td>
                           </tr>
                         ))}

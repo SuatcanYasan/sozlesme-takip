@@ -19,6 +19,11 @@ const Dashboard = () => {
     setYenilemeAnahtari(prev => prev + 1);
   };
 
+  const handleOdemeYapildi = () => {
+    setYenilemeAnahtari(prev => prev + 1);
+    istatistikleriYukle();
+  };
+
   const formatPara = (tutar) => {
     return new Intl.NumberFormat('tr-TR', {
       style: 'currency',
@@ -159,7 +164,7 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <SozlesmeListesi yenile={yenilemeAnahtari} onSozlesmeEklendi={handleSozlesmeEklendi} />
+      <SozlesmeListesi yenile={yenilemeAnahtari} onSozlesmeEklendi={handleSozlesmeEklendi} onOdemeYapildi={handleOdemeYapildi} />
 
       <OdemeGrafigi yenile={yenilemeAnahtari} />
     </div>
