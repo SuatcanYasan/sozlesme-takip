@@ -6,6 +6,7 @@ const SozlesmeForm = ({ onSozlesmeEklendi }) => {
   const [formData, setFormData] = useState({
     isim: '',
     soyisim: '',
+    gsm: '',
     sozlesme_no: '',
     sozlesme_tarihi: '',
     vade_baslangic_tarihi: '',
@@ -53,6 +54,7 @@ const SozlesmeForm = ({ onSozlesmeEklendi }) => {
         const taksitData = {
           isim: formData.isim,
           soyisim: formData.soyisim,
+          gsm: formData.gsm,
           sozlesme_no: formData.sozlesme_no,
           sozlesme_tarihi: Timestamp.fromDate(sozlesmeTarihi),
           vade_baslangic_tarihi: Timestamp.fromDate(vadeBaslangicTarihi),
@@ -79,6 +81,7 @@ const SozlesmeForm = ({ onSozlesmeEklendi }) => {
       setFormData({
         isim: '',
         soyisim: '',
+        gsm: '',
         sozlesme_no: '',
         sozlesme_tarihi: '',
         vade_baslangic_tarihi: '',
@@ -141,6 +144,22 @@ const SozlesmeForm = ({ onSozlesmeEklendi }) => {
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
                   placeholder="Örn: Yılmaz"
                   required
+              />
+            </div>
+
+            {/* Telefon Numarası */}
+            <div>
+              <label htmlFor="gsm" className="block text-sm font-medium text-gray-700 mb-2">
+                Telefon Numarası
+              </label>
+              <input
+                  type="tel"
+                  id="gsm"
+                  name="gsm"
+                  value={formData.gsm}
+                  onChange={handleChange}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                  placeholder="Örn: 0555 123 4567"
               />
             </div>
 
@@ -211,25 +230,6 @@ const SozlesmeForm = ({ onSozlesmeEklendi }) => {
               />
             </div>
 
-            {/* Taksit Tutar */}
-            <div>
-              <label htmlFor="taksit_tutari" className="block text-sm font-medium text-gray-700 mb-2">
-                Taksit Tutarı (₺) *
-              </label>
-              <input
-                  type="number"
-                  id="taksit_tutari"
-                  name="taksit_tutari"
-                  value={formData.taksit_tutari}
-                  onChange={handleChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
-                  placeholder="Örn: 1500.00"
-                  min="0"
-                  step="0.01"
-                  required
-              />
-            </div>
-
             {/* Vade Aralığı */}
             <div>
               <label htmlFor="vade_araligi" className="block text-sm font-medium text-gray-700 mb-2">
@@ -247,6 +247,24 @@ const SozlesmeForm = ({ onSozlesmeEklendi }) => {
                   required
               />
             </div>
+        {/* Taksit Tutar */}
+        <div>
+          <label htmlFor="taksit_tutari" className="block text-sm font-medium text-gray-700 mb-2">
+            Taksit Tutarı (₺) *
+          </label>
+          <input
+              type="number"
+              id="taksit_tutari"
+              name="taksit_tutari"
+              value={formData.taksit_tutari}
+              onChange={handleChange}
+              className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+              placeholder="Örn: 1500.00"
+              min="0"
+              step="0.01"
+              required
+          />
+        </div>
           </div>
 
           {hata && (

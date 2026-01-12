@@ -60,6 +60,7 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi }) => {
           sozlesme_no: taksit.sozlesme_no,
           isim: taksit.isim,
           soyisim: taksit.soyisim,
+          gsm: taksit.gsm,
           sozlesme_tarihi: taksit.sozlesme_tarihi,
           vade_baslangic_tarihi: taksit.vade_baslangic_tarihi,
           taksitler: [],
@@ -714,6 +715,11 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi }) => {
                   </h3>
                   <p className="text-sm text-gray-600 mt-1">
                     Sözleşme No: <span className="font-semibold">{seciliSozlesme.sozlesme_no}</span>
+                    {seciliSozlesme.gsm && (
+                      <span className="ml-4">
+                        | Telefon: <span className="font-semibold">{seciliSozlesme.gsm}</span>
+                      </span>
+                    )}
                   </p>
                 </div>
                 <button

@@ -347,6 +347,9 @@ const OdemeGrafigi = ({ yenile }) => {
                             İsim Soyisim
                           </th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                            Telefon
+                          </th>
+                          <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
                             Vade Tarihi
                           </th>
                           <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase">
@@ -368,6 +371,9 @@ const OdemeGrafigi = ({ yenile }) => {
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
                               {vade.isim} {vade.soyisim}
+                            </td>
+                            <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
+                              {vade.gsm || '-'}
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">
                               {vade.vade_tarihi ? new Date(vade.vade_tarihi.toDate()).toLocaleDateString('tr-TR') : '-'}
