@@ -394,30 +394,31 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi }) => {
   return (
     <>
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200">
-          <div className="flex items-center justify-between">
+        <div className="px-4 md:px-6 py-4 border-b border-gray-200">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
-              <h2 className="text-2xl font-bold text-gray-800">
+              <h2 className="text-xl md:text-2xl font-bold text-gray-800">
                 Sözleşme Listesi
               </h2>
-              <p className="text-gray-600 mt-1">
-                Toplam {gruplananSozlesmeler.length} sözleşme • {filtrelenmisVeriler.length} sonuç gösteriliyor
+              <p className="text-sm md:text-base text-gray-600 mt-1">
+                Toplam {gruplananSozlesmeler.length} sözleşme • {filtrelenmisVeriler.length} sonuç
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 md:gap-3">
               <button
                 onClick={() => setFormModalAcik(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition duration-200 shadow-sm"
+                className="flex items-center gap-2 px-3 md:px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm md:text-base font-medium rounded-lg transition duration-200 shadow-sm"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                Yeni Sözleşme Ekle
+                <span className="hidden sm:inline">Yeni Sözleşme Ekle</span>
+                <span className="sm:hidden">Ekle</span>
               </button>
               {(Object.values(aramalar).some(v => v !== '')) && (
                 <button
                   onClick={aramalariTemizle}
-                  className="px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm font-medium rounded-lg transition duration-200"
+                  className="px-3 md:px-4 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs md:text-sm font-medium rounded-lg transition duration-200"
                 >
                   Aramaları Temizle
                 </button>
