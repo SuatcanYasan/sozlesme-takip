@@ -54,7 +54,6 @@ const ContractForm = ({ onSozlesmeEklendi }) => {
 
       const taksitKayitlari = [];
 
-      // Peşinat varsa ilk taksit olarak peşinat ekle
       if (formData.pesinat_varmi && formData.pesinat_tutari) {
         const pesinatTutari = Number(formData.pesinat_tutari);
         const pesinatData = {
@@ -64,20 +63,19 @@ const ContractForm = ({ onSozlesmeEklendi }) => {
           sozlesme_no: formData.sozlesme_no,
           sozlesme_tarihi: Timestamp.fromDate(sozlesmeTarihi),
           vade_baslangic_tarihi: Timestamp.fromDate(vadeBaslangicTarihi),
-          vade_tarihi: Timestamp.fromDate(sozlesmeTarihi), // Peşinat için sözleşme tarihi
-          taksit_sira: 1, // İlk taksit
-          toplam_taksit: taksitSayisi + 1, // Peşinat + taksit sayısı
+          vade_tarihi: Timestamp.fromDate(sozlesmeTarihi),
+          taksit_sira: 1,
+          toplam_taksit: taksitSayisi + 1,
           taksit_tutari: pesinatTutari,
-          odenen_tutar: pesinatTutari, // Peşinat ödendi olarak işaretleniyor
+          odenen_tutar: pesinatTutari,
           kalan_tutar: 0,
           vade_araligi: vadeAraligi,
-          status: 0, // Ödendi
-          pesinat: true, // Peşinat işareti
+          status: 0,
+          pesinat: true,
           olusturma_tarihi: Timestamp.now()
         };
         taksitKayitlari.push(pesinatData);
 
-        // Peşinat için ödeme kaydı oluştur
         const pesinatOdemeKaydi = {
           isim: formData.isim,
           soyisim: formData.soyisim,
@@ -88,12 +86,10 @@ const ContractForm = ({ onSozlesmeEklendi }) => {
           olusturma_tarihi: Timestamp.now()
         };
 
-        // Peşinat ödemesini odemeler koleksiyonuna ekle
         await addDoc(collection(db, 'odemeler'), pesinatOdemeKaydi);
       }
 
-      // Normal taksitleri ekle
-      const baslangicSirasi = formData.pesinat_varmi ? 2 : 1; // Peşinat varsa 2'den başla
+      const baslangicSirasi = formData.pesinat_varmi ? 2 : 1;
       for (let i = 0; i < taksitSayisi; i++) {
         const vadeTarihi = new Date(vadeBaslangicTarihi);
         vadeTarihi.setDate(vadeTarihi.getDate() + (vadeAraligi * i));
@@ -168,7 +164,6 @@ const ContractForm = ({ onSozlesmeEklendi }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* İsim */}
             <div>
               <label htmlFor="isim" className="block text-sm font-medium text-gray-700 mb-2">
                 İsim *
@@ -185,7 +180,6 @@ const ContractForm = ({ onSozlesmeEklendi }) => {
               />
             </div>
 
-            {/* Soyisim */}
             <div>
               <label htmlFor="soyisim" className="block text-sm font-medium text-gray-700 mb-2">
                 Soyisim *
@@ -202,7 +196,6 @@ const ContractForm = ({ onSozlesmeEklendi }) => {
               />
             </div>
 
-            {/* Telefon Numarası */}
             <div>
               <label htmlFor="gsm" className="block text-sm font-medium text-gray-700 mb-2">
                 Telefon Numarası
@@ -218,7 +211,6 @@ const ContractForm = ({ onSozlesmeEklendi }) => {
               />
             </div>
 
-            {/* Sözleşme No */}
             <div>
               <label htmlFor="sozlesme_no" className="block text-sm font-medium text-gray-700 mb-2">
                 Sözleşme No *
@@ -235,7 +227,6 @@ const ContractForm = ({ onSozlesmeEklendi }) => {
               />
             </div>
 
-            {/* Sözleşme Tarihi */}
             <div>
               <label htmlFor="sozlesme_tarihi" className="block text-sm font-medium text-gray-700 mb-2">
                 Sözleşme Tarihi *
@@ -251,7 +242,6 @@ const ContractForm = ({ onSozlesmeEklendi }) => {
               />
             </div>
 
-            {/* Vade Başlangıç Tarihi */}
             <div>
               <label htmlFor="vade_baslangic_tarihi" className="block text-sm font-medium text-gray-700 mb-2">
                 Vade Başlangıç Tarihi *
@@ -267,7 +257,6 @@ const ContractForm = ({ onSozlesmeEklendi }) => {
               />
             </div>
 
-            {/* Taksit Sayısı */}
             <div>
               <label htmlFor="taksit_sayisi" className="block text-sm font-medium text-gray-700 mb-2">
                 Taksit Sayısı *
@@ -285,7 +274,6 @@ const ContractForm = ({ onSozlesmeEklendi }) => {
               />
             </div>
 
-            {/* Vade Aralığı */}
             <div>
               <label htmlFor="vade_araligi" className="block text-sm font-medium text-gray-700 mb-2">
                 Vade Aralığı *
@@ -302,7 +290,6 @@ const ContractForm = ({ onSozlesmeEklendi }) => {
                   required
               />
             </div>
-        {/* Taksit Tutar */}
         <div>
           <label htmlFor="taksit_tutari" className="block text-sm font-medium text-gray-700 mb-2">
             Taksit Tutarı (₺) *
@@ -321,7 +308,6 @@ const ContractForm = ({ onSozlesmeEklendi }) => {
           />
         </div>
 
-        {/* Peşinat Var mı? */}
         <div className="flex items-center">
           <div className="flex items-center h-full">
             <input
@@ -338,7 +324,6 @@ const ContractForm = ({ onSozlesmeEklendi }) => {
           </div>
         </div>
 
-        {/* Peşinat Tutarı - Sadece checkbox işaretliyse göster */}
         {formData.pesinat_varmi && (
           <div>
             <label htmlFor="pesinat_tutari" className="block text-sm font-medium text-gray-700 mb-2">

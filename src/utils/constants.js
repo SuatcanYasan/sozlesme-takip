@@ -16,11 +16,6 @@ export const STATUS_COLORS = {
     [STATUS.PARTIALLY_PAID]: 'bg-yellow-100 text-yellow-800'
 };
 
-/**
- * @param {number} paidAmount 
- * @param {number} remainingAmount 
- * @returns {number} 
- */
 export const calculateStatus = (paidAmount, remainingAmount) => {
     if (remainingAmount === 0) {
         return STATUS.PAID;
@@ -30,10 +25,6 @@ export const calculateStatus = (paidAmount, remainingAmount) => {
     return STATUS.AWAITING_PAYMENT;
 };
 
-/**
- * @param {number} status
- * @returns {Object}
- */
 export const getStatusBadge = (status = STATUS.AWAITING_PAYMENT) => {
     return {
         label: STATUS_LABELS[status],
