@@ -83,6 +83,7 @@ const ContractForm = ({ onSozlesmeEklendi }) => {
           taksit_sira: 1,
           odeme_tutari: pesinatTutari,
           odeme_tarihi: Timestamp.fromDate(sozlesmeTarihi),
+          odeme_tipi: 'sozlesme',
           olusturma_tarihi: Timestamp.now()
         };
 

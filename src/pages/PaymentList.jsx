@@ -20,7 +20,8 @@ const PaymentList = () => {
     sozlesme_no: '',
     taksit_sira: '',
     odeme_tutari: '',
-    odeme_tarihi: ''
+    odeme_tarihi: '',
+    odeme_tipi: 'ozel'
   });
   const [odemeEkleYukleniyor, setOdemeEkleYukleniyor] = useState(false);
   const [silmeYukleniyor, setSilmeYukleniyor] = useState(null);
@@ -63,7 +64,8 @@ const PaymentList = () => {
       sozlesme_no: '',
       taksit_sira: '',
       odeme_tutari: '',
-      odeme_tarihi: bugun
+      odeme_tarihi: bugun,
+      odeme_tipi: 'ozel'
     });
     setOdemeEkleModalAcik(true);
   };
@@ -76,26 +78,32 @@ const PaymentList = () => {
       sozlesme_no: '',
       taksit_sira: '',
       odeme_tutari: '',
-      odeme_tarihi: ''
+      odeme_tarihi: '',
+      odeme_tipi: 'ozel'
     });
   };
 
   const yeniOdemeKaydet = async () => {
-    if (!yeniOdeme.isim || !yeniOdeme.soyisim || !yeniOdeme.sozlesme_no ||
-        !yeniOdeme.taksit_sira || !yeniOdeme.odeme_tutari || !yeniOdeme.odeme_tarihi) {
-      alert('Lütfen tüm alanları doldurun');
+    if (!yeniOdeme.isim || !yeniOdeme.soyisim || !yeniOdeme.odeme_tutari || !yeniOdeme.odeme_tarihi) {
+      alert('Lütfen zorunlu alanları doldurun (İsim, Soyisim, Tutar, Tarih)');
+      return;
+    }
+
+    // Ödeme tipi "sozlesme" ise sözleşme no ve taksit sıra zorunlu
+    if (yeniOdeme.odeme_tipi === 'sozlesme' && (!yeniOdeme.sozlesme_no || !yeniOdeme.taksit_sira)) {
+      alert('Sözleşme ödemesi için Sözleşme No ve Taksit Sırası zorunludur');
       return;
     }
 
     const odemeTutari = parseFloat(yeniOdeme.odeme_tutari);
-    const taksitSira = parseInt(yeniOdeme.taksit_sira);
+    const taksitSira = yeniOdeme.taksit_sira ? parseInt(yeniOdeme.taksit_sira) : null;
 
     if (!isPositiveNumber(odemeTutari)) {
       alert('Lütfen geçerli bir tutar girin');
       return;
     }
 
-    if (!isPositiveNumber(taksitSira) || taksitSira < 1) {
+    if (yeniOdeme.odeme_tipi === 'sozlesme' && (!isPositiveNumber(taksitSira) || taksitSira < 1)) {
       alert('Lütfen geçerli bir taksit sırası girin');
       return;
     }
@@ -105,39 +113,45 @@ const PaymentList = () => {
       const odemeKaydi = {
         isim: yeniOdeme.isim,
         soyisim: yeniOdeme.soyisim,
-        sozlesme_no: yeniOdeme.sozlesme_no,
-        taksit_sira: taksitSira,
+        sozlesme_no: yeniOdeme.sozlesme_no || '',
+        taksit_sira: taksitSira || 0,
         odeme_tutari: odemeTutari,
         odeme_tarihi: Timestamp.fromDate(new Date(yeniOdeme.odeme_tarihi)),
+        odeme_tipi: yeniOdeme.odeme_tipi,
         olusturma_tarihi: Timestamp.now()
       };
 
       await addDoc(collection(db, 'odemeler'), odemeKaydi);
 
-      const sozlesmelerQuery = query(
-        collection(db, 'sozlesmeler'),
-        where('sozlesme_no', '==', yeniOdeme.sozlesme_no),
-        where('taksit_sira', '==', taksitSira)
-      );
+      // Eğer ödeme tipi "sozlesme" ise ilgili sözleşmeyi güncelle
+      if (yeniOdeme.odeme_tipi === 'sozlesme') {
+        const sozlesmelerQuery = query(
+          collection(db, 'sozlesmeler'),
+          where('sozlesme_no', '==', yeniOdeme.sozlesme_no),
+          where('taksit_sira', '==', taksitSira)
+        );
 
-      const sozlesmelerSnapshot = await getDocs(sozlesmelerQuery);
+        const sozlesmelerSnapshot = await getDocs(sozlesmelerQuery);
 
-      if (!sozlesmelerSnapshot.empty) {
-        const taksitDoc = sozlesmelerSnapshot.docs[0];
-        const taksitData = taksitDoc.data();
+        if (!sozlesmelerSnapshot.empty) {
+          const taksitDoc = sozlesmelerSnapshot.docs[0];
+          const taksitData = taksitDoc.data();
 
-        const mevcutOdenen = taksitData.odenen_tutar || 0;
-        const taksitTutari = taksitData.taksit_tutari || 0;
+          const mevcutOdenen = taksitData.odenen_tutar || 0;
+          const taksitTutari = taksitData.taksit_tutari || 0;
 
-        const yeniOdenenTutar = mevcutOdenen + odemeTutari;
-        const yeniKalanTutar = taksitTutari - yeniOdenenTutar;
-        const yeniStatus = calculateStatus(yeniOdenenTutar, yeniKalanTutar);
+          const yeniOdenenTutar = mevcutOdenen + odemeTutari;
+          const yeniKalanTutar = taksitTutari - yeniOdenenTutar;
+          const yeniStatus = calculateStatus(yeniOdenenTutar, yeniKalanTutar);
 
-        await updateDoc(doc(db, 'sozlesmeler', taksitDoc.id), {
-          odenen_tutar: yeniOdenenTutar,
-          kalan_tutar: yeniKalanTutar,
-          status: yeniStatus
-        });
+          await updateDoc(doc(db, 'sozlesmeler', taksitDoc.id), {
+            odenen_tutar: yeniOdenenTutar,
+            kalan_tutar: yeniKalanTutar,
+            status: yeniStatus
+          });
+        } else {
+          alert('Uyarı: Belirtilen sözleşme ve taksit bulunamadı. Ödeme kaydı eklendi ancak sözleşme güncellenmedi.');
+        }
       }
 
       alert('Ödeme başarıyla eklendi!');
@@ -152,41 +166,53 @@ const PaymentList = () => {
   };
 
   const odemeSil = async (odeme) => {
-    if (!window.confirm(`${odeme.isim} ${odeme.soyisim} - ${odeme.sozlesme_no} (${odeme.taksit_sira}. taksit) için ${formatCurrency(odeme.odeme_tutari)} tutarındaki ödemeyi silmek istediğinize emin misiniz?\n\nBu işlem ilgili taksitteki ödeme bilgilerini geri alacaktır.`)) {
+    const odemeTipiText = odeme.odeme_tipi === 'sozlesme' ? 'Sözleşme Ödemesi' : 'Özel Ödeme';
+    const mesaj = odeme.odeme_tipi === 'sozlesme'
+      ? `${odeme.isim} ${odeme.soyisim} - ${odeme.sozlesme_no} (${odeme.taksit_sira}. taksit) için ${formatCurrency(odeme.odeme_tutari)} tutarındaki ${odemeTipiText}'ni silmek istediğinize emin misiniz?\n\nBu işlem ilgili taksitteki ödeme bilgilerini geri alacaktır.`
+      : `${odeme.isim} ${odeme.soyisim} için ${formatCurrency(odeme.odeme_tutari)} tutarındaki ${odemeTipiText}'yi silmek istediğinize emin misiniz?`;
+
+    if (!window.confirm(mesaj)) {
       return;
     }
 
     setSilmeYukleniyor(odeme.id);
     try {
-      const sozlesmelerQuery = query(
-        collection(db, 'sozlesmeler'),
-        where('sozlesme_no', '==', odeme.sozlesme_no),
-        where('taksit_sira', '==', odeme.taksit_sira)
-      );
+      // Eğer ödeme tipi "sozlesme" ise ilgili sözleşmeyi güncelle
+      if (odeme.odeme_tipi === 'sozlesme' && odeme.sozlesme_no && odeme.taksit_sira) {
+        const sozlesmelerQuery = query(
+          collection(db, 'sozlesmeler'),
+          where('sozlesme_no', '==', odeme.sozlesme_no),
+          where('taksit_sira', '==', odeme.taksit_sira)
+        );
 
-      const sozlesmelerSnapshot = await getDocs(sozlesmelerQuery);
+        const sozlesmelerSnapshot = await getDocs(sozlesmelerQuery);
 
-      if (!sozlesmelerSnapshot.empty) {
-        const taksitDoc = sozlesmelerSnapshot.docs[0];
-        const taksitData = taksitDoc.data();
+        if (!sozlesmelerSnapshot.empty) {
+          const taksitDoc = sozlesmelerSnapshot.docs[0];
+          const taksitData = taksitDoc.data();
 
-        const mevcutOdenen = taksitData.odenen_tutar || 0;
-        const taksitTutari = taksitData.taksit_tutari || 0;
+          const mevcutOdenen = taksitData.odenen_tutar || 0;
+          const taksitTutari = taksitData.taksit_tutari || 0;
 
-        const yeniOdenenTutar = Math.max(0, mevcutOdenen - odeme.odeme_tutari);
-        const yeniKalanTutar = taksitTutari - yeniOdenenTutar;
-        const yeniStatus = calculateStatus(yeniOdenenTutar, yeniKalanTutar);
+          const yeniOdenenTutar = Math.max(0, mevcutOdenen - odeme.odeme_tutari);
+          const yeniKalanTutar = taksitTutari - yeniOdenenTutar;
+          const yeniStatus = calculateStatus(yeniOdenenTutar, yeniKalanTutar);
 
-        await updateDoc(doc(db, 'sozlesmeler', taksitDoc.id), {
-          odenen_tutar: yeniOdenenTutar,
-          kalan_tutar: yeniKalanTutar,
-          status: yeniStatus
-        });
+          await updateDoc(doc(db, 'sozlesmeler', taksitDoc.id), {
+            odenen_tutar: yeniOdenenTutar,
+            kalan_tutar: yeniKalanTutar,
+            status: yeniStatus
+          });
+        }
       }
 
       await deleteDoc(doc(db, 'odemeler', odeme.id));
 
-      alert('Ödeme başarıyla silindi ve taksit bilgileri güncellendi!');
+      const basariMesaji = odeme.odeme_tipi === 'sozlesme'
+        ? 'Ödeme başarıyla silindi ve taksit bilgileri güncellendi!'
+        : 'Ödeme başarıyla silindi!';
+
+      alert(basariMesaji);
       odemeleriYukle();
     } catch (error) {
       console.error('Ödeme silinirken hata:', error);
@@ -322,6 +348,9 @@ const PaymentList = () => {
                     Taksit
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Ödeme Tipi
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Ödeme Tarihi
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -351,6 +380,7 @@ const PaymentList = () => {
                     />
                   </th>
                   <th className="px-2 py-2"></th>
+                  <th className="px-2 py-2"></th>
                   <th className="px-2 py-2">
                     <input
                       type="text"
@@ -373,12 +403,27 @@ const PaymentList = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-600">{odeme.sozlesme_no}</div>
+                      <div className="text-sm text-gray-600">{odeme.sozlesme_no || '-'}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
-                        {odeme.taksit_sira}
-                      </span>
+                      {odeme.taksit_sira ? (
+                        <span className="px-2 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800">
+                          {odeme.taksit_sira}
+                        </span>
+                      ) : (
+                        <span className="text-sm text-gray-400">-</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      {odeme.odeme_tipi === 'sozlesme' ? (
+                        <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">
+                          Sözleşme
+                        </span>
+                      ) : (
+                        <span className="px-2 py-1 text-xs font-semibold rounded-full bg-purple-100 text-purple-800">
+                          Özel
+                        </span>
+                      )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-600">{formatDate(odeme.odeme_tarihi)}</div>
@@ -437,6 +482,39 @@ const PaymentList = () => {
               <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
+                    <label htmlFor="odeme_tipi" className="block text-sm font-medium text-gray-700 mb-2">
+                      Ödeme Tipi *
+                    </label>
+                    <select
+                      id="odeme_tipi"
+                      value={yeniOdeme.odeme_tipi}
+                      onChange={(e) => setYeniOdeme(prev => ({ ...prev, odeme_tipi: e.target.value }))}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
+                    >
+                      <option value="ozel">Özel Ödeme</option>
+                      <option value="sozlesme">Sözleşme Ödemesi</option>
+                    </select>
+                    <p className="mt-1 text-xs text-gray-500">
+                      {yeniOdeme.odeme_tipi === 'sozlesme'
+                        ? 'Sözleşme ödemesi seçildiğinde ilgili taksit güncellenir'
+                        : 'Özel ödeme sadece kayıt olarak eklenir, sözleşmeleri etkilemez'}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label htmlFor="odeme_tarihi" className="block text-sm font-medium text-gray-700 mb-2">
+                      Ödeme Tarihi *
+                    </label>
+                    <input
+                      type="date"
+                      id="odeme_tarihi"
+                      value={yeniOdeme.odeme_tarihi}
+                      onChange={(e) => setYeniOdeme(prev => ({ ...prev, odeme_tarihi: e.target.value }))}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
+                    />
+                  </div>
+
+                  <div>
                     <label htmlFor="odeme_isim" className="block text-sm font-medium text-gray-700 mb-2">
                       İsim *
                     </label>
@@ -466,7 +544,7 @@ const PaymentList = () => {
 
                   <div>
                     <label htmlFor="odeme_sozlesme_no" className="block text-sm font-medium text-gray-700 mb-2">
-                      Sözleşme No *
+                      Sözleşme No {yeniOdeme.odeme_tipi === 'sozlesme' && '*'}
                     </label>
                     <input
                       type="text"
@@ -475,12 +553,13 @@ const PaymentList = () => {
                       onChange={(e) => setYeniOdeme(prev => ({ ...prev, sozlesme_no: e.target.value }))}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
                       placeholder="Örn: SZL-2024-001"
+                      disabled={yeniOdeme.odeme_tipi === 'ozel'}
                     />
                   </div>
 
                   <div>
                     <label htmlFor="odeme_taksit_sira" className="block text-sm font-medium text-gray-700 mb-2">
-                      Taksit Sırası *
+                      Taksit Sırası {yeniOdeme.odeme_tipi === 'sozlesme' && '*'}
                     </label>
                     <input
                       type="number"
@@ -490,6 +569,7 @@ const PaymentList = () => {
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
                       placeholder="Örn: 1"
                       min="1"
+                      disabled={yeniOdeme.odeme_tipi === 'ozel'}
                     />
                   </div>
 
@@ -508,23 +588,12 @@ const PaymentList = () => {
                       step="0.01"
                     />
                   </div>
-
-                  <div>
-                    <label htmlFor="odeme_tarihi" className="block text-sm font-medium text-gray-700 mb-2">
-                      Ödeme Tarihi *
-                    </label>
-                    <input
-                      type="date"
-                      id="odeme_tarihi"
-                      value={yeniOdeme.odeme_tarihi}
-                      onChange={(e) => setYeniOdeme(prev => ({ ...prev, odeme_tarihi: e.target.value }))}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition"
-                    />
-                  </div>
                 </div>
 
                 <div className="bg-blue-50 border border-blue-200 text-blue-700 px-4 py-3 rounded-lg text-sm">
-                  <strong>Not:</strong> Bu ödeme kaydı eklendiğinde, eğer belirtilen sözleşme numarası ve taksit sırası sistemde mevcutsa, ilgili taksitteki ödenen tutar, kalan tutar ve durum bilgileri otomatik olarak güncellenecektir.
+                  <strong>Not:</strong> {yeniOdeme.odeme_tipi === 'sozlesme'
+                    ? 'Sözleşme ödemesi seçildiğinde, belirtilen sözleşme numarası ve taksit sırası sistemde mevcutsa, ilgili taksitteki ödenen tutar, kalan tutar ve durum bilgileri otomatik olarak güncellenecektir.'
+                    : 'Özel ödeme türü seçildiğinde, bu ödeme sadece kayıt olarak sisteme eklenecek ve herhangi bir sözleşmeyi etkilemeyecektir.'}
                 </div>
               </div>
             </div>

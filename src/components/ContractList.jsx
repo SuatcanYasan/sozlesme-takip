@@ -396,6 +396,7 @@ const ContractList = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
         taksit_sira: odemeYapilacakTaksit.taksit_sira,
         odeme_tutari: odemeTutariSayi,
         odeme_tarihi: Timestamp.fromDate(new Date(odemeTarihi)),
+        odeme_tipi: 'sozlesme',
         olusturma_tarihi: Timestamp.now()
       };
 
