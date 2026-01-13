@@ -76,6 +76,20 @@ const ContractForm = ({ onSozlesmeEklendi }) => {
           olusturma_tarihi: Timestamp.now()
         };
         taksitKayitlari.push(pesinatData);
+
+        // Peşinat için ödeme kaydı oluştur
+        const pesinatOdemeKaydi = {
+          isim: formData.isim,
+          soyisim: formData.soyisim,
+          sozlesme_no: formData.sozlesme_no,
+          taksit_sira: 1,
+          odeme_tutari: pesinatTutari,
+          odeme_tarihi: Timestamp.fromDate(sozlesmeTarihi),
+          olusturma_tarihi: Timestamp.now()
+        };
+
+        // Peşinat ödemesini odemeler koleksiyonuna ekle
+        await addDoc(collection(db, 'odemeler'), pesinatOdemeKaydi);
       }
 
       // Normal taksitleri ekle
