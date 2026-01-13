@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { collection, getDocs, deleteDoc, doc, query, orderBy, updateDoc, addDoc, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase';
-import SozlesmeForm from './SozlesmeForm';
+import ContractForm from './ContractForm';
 import {
   formatPara,
   formatTarih,
@@ -14,7 +14,7 @@ import {
   calculateTotalPages, getStatusBadge
 } from '../utils';
 
-const SozlesmeListesi = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
+const ContractList = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
   const [taksitler, setTaksitler] = useState([]);
   const [yukleniyor, setYukleniyor] = useState(true);
   const [hata, setHata] = useState('');
@@ -1154,7 +1154,7 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
             </div>
 
             <div className="px-6 py-4 overflow-y-auto max-h-[calc(90vh-140px)]">
-              <SozlesmeForm
+              <ContractForm
                 onSozlesmeEklendi={() => {
                   setFormModalAcik(false);
                   taksitleriYukle();
@@ -1172,5 +1172,5 @@ const SozlesmeListesi = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
   );
 };
 
-export default SozlesmeListesi;
+export default ContractList;
 

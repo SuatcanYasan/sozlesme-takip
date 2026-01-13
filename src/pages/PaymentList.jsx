@@ -3,7 +3,7 @@ import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '../firebase';
 import { formatPara, formatTarih } from '../utils';
 
-const OdemeListesi = () => {
+const PaymentList = () => {
   const [odemeler, setOdemeler] = useState([]);
   const [yukleniyor, setYukleniyor] = useState(true);
   const [hata, setHata] = useState('');
@@ -229,5 +229,5 @@ const OdemeListesi = () => {
   );
 };
 
-export default OdemeListesi;
+export default PaymentList;
 

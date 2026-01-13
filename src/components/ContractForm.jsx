@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { collection, addDoc, Timestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 
-const SozlesmeForm = ({ onSozlesmeEklendi }) => {
+const ContractForm = ({ onSozlesmeEklendi }) => {
   const [formData, setFormData] = useState({
     isim: '',
     soyisim: '',
@@ -296,5 +296,5 @@ const SozlesmeForm = ({ onSozlesmeEklendi }) => {
   );
 };
 
-export default SozlesmeForm;
+export default ContractForm;
 

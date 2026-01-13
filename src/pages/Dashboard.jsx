@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { collection, getDocs, query } from 'firebase/firestore';
 import { db } from '../firebase';
-import SozlesmeListesi from '../components/SozlesmeListesi';
-import OdemeGrafigi from '../components/OdemeGrafigi';
+import ContractList from '../components/ContractList';
+import PaymentChart from '../components/PaymentChart';
 import { formatPara, calculateKalanTutar, getUniqueValues, STATUS } from '../utils';
 
 const Dashboard = () => {
@@ -156,9 +156,9 @@ const Dashboard = () => {
         </div>
       </div>
 
-      <SozlesmeListesi yenile={yenilemeAnahtari} onSozlesmeEklendi={handleSozlesmeEklendi} onOdemeYapildi={handleOdemeYapildi} />
+      <ContractList yenile={yenilemeAnahtari} onSozlesmeEklendi={handleSozlesmeEklendi} onOdemeYapildi={handleOdemeYapildi} />
 
-      <OdemeGrafigi yenile={yenilemeAnahtari} />
+      <PaymentChart yenile={yenilemeAnahtari} />
     </div>
   );
 };

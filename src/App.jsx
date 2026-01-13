@@ -5,8 +5,8 @@ import Header from './components/Layout/Header';
 import Footer from './components/Layout/Footer';
 import MobileNav from './components/Layout/MobileNav';
 import Dashboard from './pages/Dashboard';
-import OdemeListesi from './pages/OdemeListesi';
-import GiderListesi from './pages/GiderListesi';
+import PaymentList from './pages/PaymentList';
+import ExpenseList from './pages/ExpenseList';
 
 function App() {
   return (
@@ -23,8 +23,8 @@ function App() {
             <Routes>
               <Route path="/" element={<Navigate to="/dashboard" replace />} />
               <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/odeme-listesi" element={<OdemeListesi />} />
-              <Route path="/gider-listesi" element={<GiderListesi />} />
+              <Route path="/odeme-listesi" element={<PaymentList />} />
+              <Route path="/gider-listesi" element={<ExpenseList />} />
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </main>

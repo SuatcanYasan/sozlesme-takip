@@ -1,6 +1,6 @@
 import React from 'react';
 
-const GiderListesi = () => {
+const ExpenseList = () => {
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -82,5 +82,5 @@ const GiderListesi = () => {
   );
 };
 
-export default GiderListesi;
+export default ExpenseList;
 

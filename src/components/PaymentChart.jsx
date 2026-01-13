@@ -4,7 +4,7 @@ import { db } from '../firebase';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { formatPara, calculateKalanTutar, STATUS } from '../utils';
 
-const OdemeGrafigi = ({ yenile }) => {
+const PaymentChart = ({ yenile }) => {
   const [grafikVerisi, setGrafikVerisi] = useState([]);
   const [yukleniyor, setYukleniyor] = useState(true);
   const [hata, setHata] = useState('');
@@ -403,5 +403,5 @@ const OdemeGrafigi = ({ yenile }) => {
   );
 };
 
-export default OdemeGrafigi;
+export default PaymentChart;
 
