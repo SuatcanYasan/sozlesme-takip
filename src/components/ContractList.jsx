@@ -113,6 +113,8 @@ const ContractList = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
 
   const toplamSayfa = calculateTotalPages(filtrelenmisVeriler.length, sayfaBasinaKayit);
   const mevcutVeriler = paginateData(filtrelenmisVeriler, mevcutSayfa, sayfaBasinaKayit);
+  const baslangicIndex = (mevcutSayfa - 1) * sayfaBasinaKayit;
+  const bitisIndex = baslangicIndex + mevcutVeriler.length;
 
   const taksitleriYukle = async () => {
     setYukleniyor(true);

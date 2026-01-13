@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { collection, getDocs, query, orderBy, deleteDoc, doc, updateDoc, addDoc, Timestamp, where } from 'firebase/firestore';
 import { db } from '../firebase';
-import { formatCurrency, formatDate, calculateStatus, isPositiveNumber } from '../utils';
+import { formatCurrency, formatDate, calculateStatus, isPositiveNumber, paginateData, calculateTotalPages } from '../utils';
 
 const PaymentList = () => {
   const [odemeler, setOdemeler] = useState([]);
   const [yukleniyor, setYukleniyor] = useState(true);
   const [hata, setHata] = useState('');
+  const [mevcutSayfa, setMevcutSayfa] = useState(1);
+  const [sayfaBasinaKayit] = useState(10);
   const [aramalar, setAramalar] = useState({
     isim_soyisim: '',
     sozlesme_no: '',
@@ -236,6 +238,19 @@ const PaymentList = () => {
 
   const toplamOdeme = filtrelenmisOdemeler.reduce((sum, odeme) => sum + (odeme.odeme_tutari || 0), 0);
 
+  const toplamSayfa = calculateTotalPages(filtrelenmisOdemeler.length, sayfaBasinaKayit);
+  const mevcutVeriler = paginateData(filtrelenmisOdemeler, mevcutSayfa, sayfaBasinaKayit);
+  const baslangicIndex = (mevcutSayfa - 1) * sayfaBasinaKayit;
+  const bitisIndex = baslangicIndex + mevcutVeriler.length;
+
+  const aramaDegistir = (alan, deger) => {
+    setAramalar(prev => ({
+      ...prev,
+      [alan]: deger
+    }));
+    setMevcutSayfa(1);
+  };
+
   if (yukleniyor) {
     return (
       <div className="bg-white rounded-lg shadow-md p-6">
@@ -310,7 +325,9 @@ const PaymentList = () => {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
               <h2 className="text-[14px] font-semibold text-gray-700">Ödeme Geçmişi</h2>
-              <p className="text-xs text-gray-500 mt-0.5">Tüm ödemeler kronolojik sırada</p>
+              <p className="text-xs text-gray-500 mt-0.5">
+                Toplam {odemeler.length} ödeme • {filtrelenmisOdemeler.length} sonuç
+              </p>
             </div>
             <button
               onClick={odemeEkleModalAc}
@@ -366,7 +383,7 @@ const PaymentList = () => {
                       type="text"
                       placeholder="İsim/Soyisim..."
                       value={aramalar.isim_soyisim}
-                      onChange={(e) => setAramalar(prev => ({ ...prev, isim_soyisim: e.target.value }))}
+                      onChange={(e) => aramaDegistir('isim_soyisim', e.target.value)}
                       className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 outline-none"
                     />
                   </th>
@@ -375,7 +392,7 @@ const PaymentList = () => {
                       type="text"
                       placeholder="Sözleşme No..."
                       value={aramalar.sozlesme_no}
-                      onChange={(e) => setAramalar(prev => ({ ...prev, sozlesme_no: e.target.value }))}
+                      onChange={(e) => aramaDegistir('sozlesme_no', e.target.value)}
                       className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 outline-none"
                     />
                   </th>
@@ -386,7 +403,7 @@ const PaymentList = () => {
                       type="text"
                       placeholder="Tarih..."
                       value={aramalar.tarih}
-                      onChange={(e) => setAramalar(prev => ({ ...prev, tarih: e.target.value }))}
+                      onChange={(e) => aramaDegistir('tarih', e.target.value)}
                       className="w-full px-2 py-1 text-xs border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 outline-none"
                     />
                   </th>
@@ -395,7 +412,7 @@ const PaymentList = () => {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
-                {filtrelenmisOdemeler.map((odeme) => (
+                {mevcutVeriler.map((odeme) => (
                   <tr key={odeme.id} className="hover:bg-gray-50 transition">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900">
@@ -456,6 +473,81 @@ const PaymentList = () => {
                 ))}
               </tbody>
             </table>
+
+            {filtrelenmisOdemeler.length > 0 && toplamSayfa > 1 && (
+              <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
+                <div className="flex items-center justify-between">
+                  <div className="text-sm text-gray-700">
+                    <span className="font-medium">{baslangicIndex + 1}</span>
+                    {' '}-{' '}
+                    <span className="font-medium">{Math.min(bitisIndex, filtrelenmisOdemeler.length)}</span>
+                    {' '}arası gösteriliyor (Toplam{' '}
+                    <span className="font-medium">{filtrelenmisOdemeler.length}</span>
+                    {' '}kayıt)
+                  </div>
+
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => setMevcutSayfa(1)}
+                      disabled={mevcutSayfa === 1}
+                      className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                    >
+                      İlk
+                    </button>
+
+                    <button
+                      onClick={() => setMevcutSayfa(prev => Math.max(prev - 1, 1))}
+                      disabled={mevcutSayfa === 1}
+                      className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                    >
+                      Önceki
+                    </button>
+
+                    <div className="flex items-center space-x-1">
+                      {Array.from({ length: toplamSayfa }, (_, i) => i + 1)
+                        .filter(sayfa => {
+                          if (toplamSayfa <= 7) return true;
+                          if (sayfa === 1 || sayfa === toplamSayfa) return true;
+                          return sayfa >= mevcutSayfa - 1 && sayfa <= mevcutSayfa + 1;
+                        })
+                        .map((sayfa, index, array) => (
+                          <React.Fragment key={sayfa}>
+                            {index > 0 && sayfa > array[index - 1] + 1 && (
+                              <span className="px-2 text-gray-500">...</span>
+                            )}
+                            <button
+                              onClick={() => setMevcutSayfa(sayfa)}
+                              className={`px-3 py-1 text-sm font-medium rounded-md transition ${
+                                mevcutSayfa === sayfa
+                                  ? 'bg-blue-600 text-white'
+                                  : 'text-gray-700 bg-white border border-gray-300 hover:bg-gray-50'
+                              }`}
+                            >
+                              {sayfa}
+                            </button>
+                          </React.Fragment>
+                        ))}
+                    </div>
+
+                    <button
+                      onClick={() => setMevcutSayfa(prev => Math.min(prev + 1, toplamSayfa))}
+                      disabled={mevcutSayfa === toplamSayfa}
+                      className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                    >
+                      Sonraki
+                    </button>
+
+                    <button
+                      onClick={() => setMevcutSayfa(toplamSayfa)}
+                      disabled={mevcutSayfa === toplamSayfa}
+                      className="px-3 py-1 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                    >
+                      Son
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
           )}
         </div>
