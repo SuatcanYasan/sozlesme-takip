@@ -17,9 +17,9 @@ src/utils/
 ## 📚 Fonksiyonlar
 
 ### formatters.js
-- `formatPara(tutar)` - Para birimi formatlar (₺)
-- `formatTarih(timestamp)` - Firebase Timestamp'i formatlar (uzun format)
-- `formatKisaTarih(timestamp)` - Firebase Timestamp'i formatlar (kısa format)
+- `formatCurrency(tutar)` - Para birimi formatlar (₺)
+- `formatDate(timestamp)` - Firebase Timestamp'i formatlar (uzun format)
+- `formatShortDate(timestamp)` - Firebase Timestamp'i formatlar (kısa format)
 
 ### validators.js
 - `isPositiveNumber(value)` - Pozitif sayı kontrolü
@@ -34,7 +34,7 @@ src/utils/
 - `getStatusBadge(status)` - Status badge props döndürür
 
 ### helpers.js
-- `calculateKalanTutar(taksit)` - Kalan tutar hesaplama
+- `calculateRemainingAmount(taksit)` - Kalan tutar hesaplama
 - `paginateData(data, currentPage, itemsPerPage)` - Sayfalama
 - `calculateTotalPages(totalItems, itemsPerPage)` - Toplam sayfa sayısı
 - `debounce(func, wait)` - Debounce fonksiyonu
@@ -48,10 +48,10 @@ src/utils/
 ### Tek Import
 ```javascript
 import { 
-  formatPara, 
-  formatTarih, 
+  formatCurrency, 
+  formatDate, 
   STATUS, 
-  calculateKalanTutar,
+  calculateRemainingAmount,
   isPositiveNumber
 } from '../utils';
 ```
@@ -61,12 +61,12 @@ import {
 #### Para Formatlama
 ```javascript
 const tutar = 1500;
-const formatted = formatPara(tutar); // "1.500 ₺"
+const formatted = formatCurrency(tutar); // "1.500 ₺"
 ```
 
 #### Status Yönetimi
 ```javascript
-const status = calculateStatus(1000, 500); // STATUS.KISMI_ODENDI
+const status = calculateStatus(1000, 500); // STATUS.PARTIALLY_PAID
 const badge = getStatusBadge(status); 
 // { label: "Kısmi Ödendi", color: "bg-yellow-100 text-yellow-800" }
 ```
@@ -80,7 +80,7 @@ if (!isPositiveNumber(tutar)) {
 
 #### Kalan Tutar Hesaplama
 ```javascript
-const kalan = calculateKalanTutar(taksit);
+const kalan = calculateRemainingAmount(taksit);
 // taksit.kalan_tutar !== undefined ? taksit.kalan_tutar : taksit.taksit_tutari
 ```
 

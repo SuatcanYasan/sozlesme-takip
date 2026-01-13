@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '../firebase';
-import { formatPara, formatTarih } from '../utils';
+import { formatCurrency, formatDate } from '../utils';
 
 const PaymentList = () => {
   const [odemeler, setOdemeler] = useState([]);
@@ -46,7 +46,7 @@ const PaymentList = () => {
   const filtrelenmisOdemeler = odemeler.filter(odeme => {
     const isimSoyisim = `${odeme.isim} ${odeme.soyisim}`.toLowerCase();
     const sozlesmeNo = odeme.sozlesme_no?.toLowerCase() || '';
-    const tarih = formatTarih(odeme.odeme_tarihi).toLowerCase();
+    const tarih = formatDate(odeme.odeme_tarihi).toLowerCase();
 
     return (
       isimSoyisim.includes(aramalar.isim_soyisim.toLowerCase()) &&
@@ -99,7 +99,7 @@ const PaymentList = () => {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600">Toplam Ödeme Tutarı</p>
-              <p className="text-xl md:text-2xl font-bold text-green-600 mt-2 font-number">{formatPara(toplamOdeme)}</p>
+              <p className="text-xl md:text-2xl font-bold text-green-600 mt-2 font-number">{formatCurrency(toplamOdeme)}</p>
             </div>
             <div className="bg-green-100 p-3 rounded-lg">
               <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -114,7 +114,7 @@ const PaymentList = () => {
             <div>
               <p className="text-sm text-gray-600">Ortalama Ödeme</p>
               <p className="text-xl md:text-2xl font-bold text-purple-600 mt-2 font-number">
-                {formatPara(filtrelenmisOdemeler.length > 0 ? toplamOdeme / filtrelenmisOdemeler.length : 0)}
+                {formatCurrency(filtrelenmisOdemeler.length > 0 ? toplamOdeme / filtrelenmisOdemeler.length : 0)}
               </p>
             </div>
             <div className="bg-purple-100 p-3 rounded-lg">
@@ -210,11 +210,11 @@ const PaymentList = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-600">{formatTarih(odeme.odeme_tarihi)}</div>
+                      <div className="text-sm text-gray-600">{formatDate(odeme.odeme_tarihi)}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-bold text-green-600">
-                        {formatPara(odeme.odeme_tutari)}
+                        {formatCurrency(odeme.odeme_tutari)}
                       </div>
                     </td>
                   </tr>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { formatPara, calculateKalanTutar, STATUS } from '../utils';
+import { formatCurrency, calculateRemainingAmount, STATUS } from '../utils';
 
 const PaymentChart = ({ yenile }) => {
   const [grafikVerisi, setGrafikVerisi] = useState([]);
@@ -18,13 +18,13 @@ const PaymentChart = ({ yenile }) => {
     const aylikOdemeler = {};
 
     vadeler.forEach((vade) => {
-      if (!vade.vade_tarihi || vade.status === STATUS.ODENDI) {
+      if (!vade.vade_tarihi || vade.status === STATUS.PAID) {
         return;
       }
 
       try {
         const vadeTarihi = vade.vade_tarihi.toDate();
-        const kalanTutar = parseFloat(calculateKalanTutar(vade));
+        const kalanTutar = parseFloat(calculateRemainingAmount(vade));
 
         if (kalanTutar <= 0) {
           return;
@@ -105,7 +105,7 @@ const PaymentChart = ({ yenile }) => {
 
     const ayAnahtari = data.ayAnahtari;
     const ayVadeleri = tumVadeler.filter(vade => {
-      if (!vade.vade_tarihi || vade.status === STATUS.ODENDI) return false;
+      if (!vade.vade_tarihi || vade.status === STATUS.PAID) return false;
 
       try {
         const vadeTarihi = vade.vade_tarihi.toDate();
@@ -129,7 +129,7 @@ const PaymentChart = ({ yenile }) => {
       return (
         <div className="bg-white p-4 border border-gray-200 rounded-lg shadow-lg">
           <p className="font-semibold text-gray-800">{payload[0].payload.ay}</p>
-          <p className="text-green-600 font-bold font-number">{formatPara(payload[0].value)}</p>
+          <p className="text-green-600 font-bold font-number">{formatCurrency(payload[0].value)}</p>
           <p className="text-sm text-gray-600 font-number">{payload[0].payload.adet} ödeme</p>
         </div>
       );
@@ -190,7 +190,7 @@ const PaymentChart = ({ yenile }) => {
           <div className="text-right">
             <p className="text-xs text-gray-500">Toplam Beklenen Gelir</p>
             <p className="text-lg md:text-[18px] font-bold text-green-600 font-number">
-              {formatPara(toplamGelir)}
+              {formatCurrency(toplamGelir)}
             </p>
           </div>
         </div>
@@ -206,7 +206,7 @@ const PaymentChart = ({ yenile }) => {
           <div className="bg-green-50 p-4 rounded-lg">
             <p className="text-sm md:text-[14px] text-gray-600">Aylık Ortalama</p>
             <p className="text-base md:text-[18px] font-bold text-green-600 font-number">
-              {formatPara(toplamGelir / grafikVerisi.length)}
+              {formatCurrency(toplamGelir / grafikVerisi.length)}
             </p>
           </div>
           <div className="bg-purple-50 p-4 rounded-lg">
@@ -274,7 +274,7 @@ const PaymentChart = ({ yenile }) => {
                   </span>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600 font-number">
-                  {formatPara(veri.tutar)}
+                  {formatCurrency(veri.tutar)}
                 </td>
               </tr>
             ))}
@@ -316,13 +316,13 @@ const PaymentChart = ({ yenile }) => {
                     <div className="bg-green-50 p-3 rounded-lg">
                       <p className="text-[14px] text-gray-600">Toplam Tutar</p>
                       <p className="text-[18px] font-bold text-green-600 font-number">
-                        {formatPara(seciliAyVerileri.reduce((sum, v) => sum + (v.taksit_tutari || 0), 0))}
+                        {formatCurrency(seciliAyVerileri.reduce((sum, v) => sum + (v.taksit_tutari || 0), 0))}
                       </p>
                     </div>
                     <div className="bg-purple-50 p-3 rounded-lg">
                       <p className="text-[14px] text-gray-600">Kalan Tutar</p>
                       <p className="text-[18px] font-bold text-purple-600 font-number">
-                        {formatPara(seciliAyVerileri.reduce((sum, v) => sum + calculateKalanTutar(v), 0))}
+                        {formatCurrency(seciliAyVerileri.reduce((sum, v) => sum + calculateRemainingAmount(v), 0))}
                       </p>
                     </div>
                   </div>
@@ -373,10 +373,10 @@ const PaymentChart = ({ yenile }) => {
                               {vade.taksit_sira}/{vade.toplam_taksit}
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap text-sm font-bold text-green-600 font-number">
-                              {formatPara(vade.taksit_tutari || 0)}
+                              {formatCurrency(vade.taksit_tutari || 0)}
                             </td>
                             <td className="px-4 py-3 whitespace-nowrap text-sm font-bold text-orange-600 font-number">
-                              {formatPara(calculateKalanTutar(vade))}
+                              {formatCurrency(calculateRemainingAmount(vade))}
                             </td>
                           </tr>
                         ))}

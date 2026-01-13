@@ -1,28 +1,18 @@
-/**
- * Para birimi formatlama fonksiyonu
- * @param {number} tutar - Formatlanacak tutar
- * @returns {string} Formatlanmış para birimi (₺)
- */
-export const formatPara = (tutar) => {
+export const formatCurrency = (amount) => {
   return new Intl.NumberFormat('tr-TR', {
     style: 'currency',
     currency: 'TRY',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0
-  }).format(tutar);
+  }).format(amount);
 };
 
-/**
- * Tarih formatlama fonksiyonu
- * @param {Object} timestamp - Firebase Timestamp objesi
- * @returns {string} Formatlanmış tarih (gün ay, yıl)
- */
-export const formatTarih = (timestamp) => {
+export const formatDate = (timestamp) => {
   if (!timestamp) return '-';
 
   try {
-    const tarih = timestamp.toDate();
-    return tarih.toLocaleDateString('tr-TR', {
+    const date = timestamp.toDate();
+    return date.toLocaleDateString('tr-TR', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
@@ -33,17 +23,12 @@ export const formatTarih = (timestamp) => {
   }
 };
 
-/**
- * Kısa tarih formatlama fonksiyonu (gün/ay/yıl)
- * @param {Object} timestamp - Firebase Timestamp objesi
- * @returns {string} Formatlanmış kısa tarih
- */
-export const formatKisaTarih = (timestamp) => {
+export const formatShortDate = (timestamp) => {
   if (!timestamp) return '-';
 
   try {
-    const tarih = timestamp.toDate();
-    return tarih.toLocaleDateString('tr-TR');
+    const date = timestamp.toDate();
+    return date.toLocaleDateString('tr-TR');
   } catch (error) {
     console.error('Tarih formatlama hatası:', error);
     return '-';

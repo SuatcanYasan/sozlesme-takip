@@ -3,7 +3,7 @@ import { collection, getDocs, query } from 'firebase/firestore';
 import { db } from '../firebase';
 import ContractList from '../components/ContractList';
 import PaymentChart from '../components/PaymentChart';
-import { formatPara, calculateKalanTutar, getUniqueValues, STATUS } from '../utils';
+import { formatCurrency, calculateRemainingAmount, getUniqueValues, STATUS } from '../utils';
 
 const Dashboard = () => {
   const [yenilemeAnahtari, setYenilemeAnahtari] = useState(0);
@@ -44,8 +44,8 @@ const Dashboard = () => {
       const toplamGelir = taksitler.reduce((sum, t) => sum + (t.taksit_tutari || 0), 0);
 
       const beklenenOdeme = taksitler.reduce((sum, t) => {
-        if (t.status === STATUS.ODENDI) return sum;
-        const kalan = calculateKalanTutar(t);
+        if (t.status === STATUS.PAID) return sum;
+        const kalan = calculateRemainingAmount(t);
         return sum + (kalan || 0);
       }, 0);
 
@@ -53,13 +53,13 @@ const Dashboard = () => {
       bugun.setHours(0, 0, 0, 0);
 
       const gecikenOdeme = taksitler.reduce((sum, t) => {
-        if (!t.vade_tarihi || t.status === STATUS.ODENDI) return sum;
+        if (!t.vade_tarihi || t.status === STATUS.PAID) return sum;
 
         try {
           const vadeTarihi = t.vade_tarihi.toDate();
           vadeTarihi.setHours(0, 0, 0, 0);
 
-          const kalan = calculateKalanTutar(t);
+          const kalan = calculateRemainingAmount(t);
 
           if (vadeTarihi < bugun && kalan > 0) {
             return sum + kalan;
@@ -112,7 +112,7 @@ const Dashboard = () => {
             <div>
               <p className="text-green-100 text-sm md:text-[14px] font-medium">Toplam Gelir</p>
               <p className="text-lg md:text-[18px] font-bold mt-2 font-number">
-                {yukleniyor ? '...' : formatPara(istatistikler.toplamGelir)}
+                {yukleniyor ? '...' : formatCurrency(istatistikler.toplamGelir)}
               </p>
             </div>
             <div className="bg-green-400 bg-opacity-30 p-2 md:p-3 rounded-lg">
@@ -128,7 +128,7 @@ const Dashboard = () => {
             <div>
               <p className="text-orange-100 text-sm md:text-[14px] font-medium">Bekleyen Ödeme</p>
               <p className="text-lg md:text-[18px] font-bold mt-2 font-number">
-                {yukleniyor ? '...' : formatPara(istatistikler.beklenenOdeme)}
+                {yukleniyor ? '...' : formatCurrency(istatistikler.beklenenOdeme)}
               </p>
             </div>
             <div className="bg-orange-400 bg-opacity-30 p-2 md:p-3 rounded-lg">
@@ -144,7 +144,7 @@ const Dashboard = () => {
             <div>
               <p className="text-red-100 text-sm md:text-[14px] font-medium">Geciken Ödeme</p>
               <p className="text-lg md:text-[18px] font-bold mt-2 font-number">
-                {yukleniyor ? '...' : formatPara(istatistikler.gecikenOdeme)}
+                {yukleniyor ? '...' : formatCurrency(istatistikler.gecikenOdeme)}
               </p>
             </div>
             <div className="bg-red-400 bg-opacity-30 p-2 md:p-3 rounded-lg">

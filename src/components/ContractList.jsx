@@ -4,9 +4,9 @@ import { collection, getDocs, deleteDoc, doc, query, orderBy, updateDoc, addDoc,
 import { db } from '../firebase';
 import ContractForm from './ContractForm';
 import {
-  formatPara,
-  formatTarih,
-  calculateKalanTutar,
+  formatCurrency,
+  formatDate,
+  calculateRemainingAmount,
   STATUS,
   calculateStatus,
   isPositiveNumber,
@@ -66,7 +66,7 @@ const ContractList = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
       gruplananlar[key].taksitler.push(taksit);
       gruplananlar[key].toplam_tutar += taksit.taksit_tutari;
 
-      if (taksit.status === STATUS.ODENDI) {
+      if (taksit.status === STATUS.PAID) {
         gruplananlar[key].odenen_taksit++;
       } else {
         gruplananlar[key].aktif_taksit++;
@@ -366,15 +366,15 @@ const ContractList = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
 
       const taksitTutari = odemeYapilacakTaksit.taksit_tutari;
       const mevcutOdenen = odemeYapilacakTaksit.odenen_tutar || 0;
-      const kalanTutar = calculateKalanTutar(odemeYapilacakTaksit);
+      const kalanTutar = calculateRemainingAmount(odemeYapilacakTaksit);
 
       if (odemeTutariSayi > taksitTutari) {
-        alert(`Ödeme tutarı taksit tutarından (${formatPara(taksitTutari)}) fazla olamaz`);
+        alert(`Ödeme tutarı taksit tutarından (${formatCurrency(taksitTutari)}) fazla olamaz`);
         return;
       }
 
       if (odemeTutariSayi > kalanTutar) {
-        alert(`Ödeme tutarı kalan tutardan (${formatPara(kalanTutar)}) fazla olamaz`);
+        alert(`Ödeme tutarı kalan tutardan (${formatCurrency(kalanTutar)}) fazla olamaz`);
         return;
       }
 
@@ -595,7 +595,7 @@ const ContractList = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-bold text-green-600">
-                        {formatPara(sozlesme.toplam_tutar)}
+                        {formatCurrency(sozlesme.toplam_tutar)}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
@@ -755,31 +755,31 @@ const ContractList = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
                 <div className="bg-blue-50 p-4 rounded-lg">
                   <p className="text-sm md:text-[14px] text-gray-600">Sözleşme Tarihi</p>
                   <p className="text-base md:text-[18px] font-bold text-blue-600">
-                    {formatTarih(seciliSozlesme.sozlesme_tarihi)}
+                    {formatDate(seciliSozlesme.sozlesme_tarihi)}
                   </p>
                 </div>
                 <div className="bg-green-50 p-4 rounded-lg">
                   <p className="text-sm md:text-[14px] text-gray-600">Vade Başlangıç</p>
                   <p className="text-base md:text-[18px] font-bold text-green-600">
-                    {formatTarih(seciliSozlesme.vade_baslangic_tarihi)}
+                    {formatDate(seciliSozlesme.vade_baslangic_tarihi)}
                   </p>
                 </div>
                 <div className="bg-purple-50 p-4 rounded-lg">
                   <p className="text-sm md:text-[14px] text-gray-600">Toplam Tutar</p>
                   <p className="text-base md:text-[18px] font-bold text-purple-600">
-                    {formatPara(seciliSozlesme.toplam_tutar)}
+                    {formatCurrency(seciliSozlesme.toplam_tutar)}
                   </p>
                 </div>
                 <div className="bg-green-100 p-4 rounded-lg">
                   <p className="text-sm md:text-[14px] text-gray-600">Toplam Ödenen</p>
                   <p className="text-base md:text-[18px] font-bold text-green-700">
-                    {formatPara(seciliSozlesme.taksitler.reduce((sum, t) => sum + (t.odenen_tutar || 0), 0))}
+                    {formatCurrency(seciliSozlesme.taksitler.reduce((sum, t) => sum + (t.odenen_tutar || 0), 0))}
                   </p>
                 </div>
                 <div className="bg-orange-50 p-4 rounded-lg">
                   <p className="text-sm md:text-[14px] text-gray-600">Toplam Kalan</p>
                   <p className="text-base md:text-[18px] font-bold text-orange-600">
-                    {formatPara(seciliSozlesme.taksitler.reduce((sum, t) => sum + calculateKalanTutar(t), 0))}
+                    {formatCurrency(seciliSozlesme.taksitler.reduce((sum, t) => sum + calculateRemainingAmount(t), 0))}
                   </p>
                 </div>
               </div>
@@ -875,7 +875,7 @@ const ContractList = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
                             ) : (
                               <div className="flex items-center gap-2">
                                 <span>
-                                  {formatTarih(taksit.vade_tarihi)}
+                                  {formatDate(taksit.vade_tarihi)}
                                 </span>
                                 <button
                                   onClick={() => vadeTarihiDuzenlemeyeBasla(taksit.id, taksit.vade_tarihi)}
@@ -938,7 +938,7 @@ const ContractList = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
                             ) : (
                               <div className="flex items-center gap-2">
                                 <span className="text-sm font-medium text-gray-900">
-                                  {formatPara(taksit.taksit_tutari)}
+                                  {formatCurrency(taksit.taksit_tutari)}
                                 </span>
                                 <button
                                   onClick={() => tutarDuzenlemeyeBasla(taksit.id, taksit.taksit_tutari)}
@@ -954,12 +954,12 @@ const ContractList = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap">
                             <span className="text-sm font-medium text-green-600">
-                              {formatPara(taksit.odenen_tutar || 0)}
+                              {formatCurrency(taksit.odenen_tutar || 0)}
                             </span>
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap">
                             <span className="text-sm font-medium text-orange-600">
-                              {formatPara(calculateKalanTutar(taksit))}
+                              {formatCurrency(calculateRemainingAmount(taksit))}
                             </span>
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap">
@@ -969,7 +969,7 @@ const ContractList = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-center">
                             {(() => {
-                              const { label, color } = getStatusBadge(taksit.status ?? STATUS.ODEME_BEKLIYOR);
+                              const { label, color } = getStatusBadge(taksit.status ?? STATUS.AWAITING_PAYMENT);
                               return (
                                 <span className={`inline-flex items-center px-3 py-1 text-xs font-semibold rounded-full ${color}`}>
                                   {label}
@@ -981,7 +981,7 @@ const ContractList = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
                             <div className="flex items-center justify-center gap-2">
                               <button
                                 onClick={() => odemeModalAc(taksit)}
-                                disabled={calculateKalanTutar(taksit) <= 0}
+                                disabled={calculateRemainingAmount(taksit) <= 0}
                                 className="inline-flex items-center px-3 py-1 bg-green-600 hover:bg-green-700 text-white text-xs font-medium rounded transition duration-200 disabled:bg-gray-400 disabled:cursor-not-allowed"
                                 title="Ödeme Yap"
                               >
@@ -1061,16 +1061,16 @@ const ContractList = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
                     <p className="text-gray-600">Taksit Tutarı:</p>
-                    <p className="font-bold text-gray-900">{formatPara(odemeYapilacakTaksit.taksit_tutari)}</p>
+                    <p className="font-bold text-gray-900">{formatCurrency(odemeYapilacakTaksit.taksit_tutari)}</p>
                   </div>
                   <div>
                     <p className="text-gray-600">Ödenen:</p>
-                    <p className="font-bold text-green-600">{formatPara(odemeYapilacakTaksit.odenen_tutar || 0)}</p>
+                    <p className="font-bold text-green-600">{formatCurrency(odemeYapilacakTaksit.odenen_tutar || 0)}</p>
                   </div>
                   <div className="col-span-2">
                     <p className="text-gray-600">Kalan Tutar:</p>
                     <p className="font-bold text-orange-600 text-base md:text-[18px]">
-                      {formatPara(calculateKalanTutar(odemeYapilacakTaksit))}
+                      {formatCurrency(calculateRemainingAmount(odemeYapilacakTaksit))}
                     </p>
                   </div>
                 </div>
@@ -1090,7 +1090,7 @@ const ContractList = ({ yenile, onSozlesmeEklendi, onOdemeYapildi }) => {
                     placeholder="Örn: 500"
                     step="0.01"
                     min="0"
-                    max={calculateKalanTutar(odemeYapilacakTaksit)}
+                    max={calculateRemainingAmount(odemeYapilacakTaksit)}
                   />
                 </div>
 
