@@ -12,7 +12,9 @@ const ContractForm = ({ onSozlesmeEklendi }) => {
     vade_baslangic_tarihi: '',
     taksit_sayisi: '',
     taksit_tutari: '',
-    vade_araligi: ''
+    vade_araligi: '',
+    pesinat_varmi: false,
+    pesinat_tutari: ''
   });
   const [yukleniyor, setYukleniyor] = useState(false);
   const [hata, setHata] = useState('');
@@ -20,10 +22,10 @@ const ContractForm = ({ onSozlesmeEklendi }) => {
   const [basariMesaji, setBasariMesaji] = useState('');
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
+    const { name, value, type, checked } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: value
+      [name]: type === 'checkbox' ? checked : value
     }));
   };
 
@@ -40,6 +42,10 @@ const ContractForm = ({ onSozlesmeEklendi }) => {
         throw new Error('Lütfen tüm alanları doldurun');
       }
 
+      if (formData.pesinat_varmi && (!formData.pesinat_tutari || Number(formData.pesinat_tutari) <= 0)) {
+        throw new Error('Peşinat varsa, peşinat tutarını girmelisiniz');
+      }
+
       const sozlesmeTarihi = new Date(formData.sozlesme_tarihi);
       const vadeBaslangicTarihi = new Date(formData.vade_baslangic_tarihi);
       const taksitSayisi = Number(formData.taksit_sayisi);
@@ -47,6 +53,33 @@ const ContractForm = ({ onSozlesmeEklendi }) => {
       const vadeAraligi = Number(formData.vade_araligi);
 
       const taksitKayitlari = [];
+
+      // Peşinat varsa ilk taksit olarak peşinat ekle
+      if (formData.pesinat_varmi && formData.pesinat_tutari) {
+        const pesinatTutari = Number(formData.pesinat_tutari);
+        const pesinatData = {
+          isim: formData.isim,
+          soyisim: formData.soyisim,
+          gsm: formData.gsm,
+          sozlesme_no: formData.sozlesme_no,
+          sozlesme_tarihi: Timestamp.fromDate(sozlesmeTarihi),
+          vade_baslangic_tarihi: Timestamp.fromDate(vadeBaslangicTarihi),
+          vade_tarihi: Timestamp.fromDate(sozlesmeTarihi), // Peşinat için sözleşme tarihi
+          taksit_sira: 1, // İlk taksit
+          toplam_taksit: taksitSayisi + 1, // Peşinat + taksit sayısı
+          taksit_tutari: pesinatTutari,
+          odenen_tutar: pesinatTutari, // Peşinat ödendi olarak işaretleniyor
+          kalan_tutar: 0,
+          vade_araligi: vadeAraligi,
+          status: 0, // Ödendi
+          pesinat: true, // Peşinat işareti
+          olusturma_tarihi: Timestamp.now()
+        };
+        taksitKayitlari.push(pesinatData);
+      }
+
+      // Normal taksitleri ekle
+      const baslangicSirasi = formData.pesinat_varmi ? 2 : 1; // Peşinat varsa 2'den başla
       for (let i = 0; i < taksitSayisi; i++) {
         const vadeTarihi = new Date(vadeBaslangicTarihi);
         vadeTarihi.setDate(vadeTarihi.getDate() + (vadeAraligi * i));
@@ -59,13 +92,14 @@ const ContractForm = ({ onSozlesmeEklendi }) => {
           sozlesme_tarihi: Timestamp.fromDate(sozlesmeTarihi),
           vade_baslangic_tarihi: Timestamp.fromDate(vadeBaslangicTarihi),
           vade_tarihi: Timestamp.fromDate(vadeTarihi),
-          taksit_sira: i + 1,
-          toplam_taksit: taksitSayisi,
+          taksit_sira: baslangicSirasi + i,
+          toplam_taksit: taksitSayisi + (formData.pesinat_varmi ? 1 : 0),
           taksit_tutari: taksitTutari,
           odenen_tutar: 0,
           kalan_tutar: taksitTutari,
           vade_araligi: vadeAraligi,
           status: 1,
+          pesinat: false,
           olusturma_tarihi: Timestamp.now()
         };
 
@@ -87,11 +121,18 @@ const ContractForm = ({ onSozlesmeEklendi }) => {
         vade_baslangic_tarihi: '',
         taksit_sayisi: '',
         taksit_tutari: '',
-        vade_araligi: ''
+        vade_araligi: '',
+        pesinat_varmi: false,
+        pesinat_tutari: ''
       });
 
+      const toplamKayit = taksitKayitlari.length;
+      const mesaj = formData.pesinat_varmi
+        ? `Peşinat + ${taksitSayisi} adet taksit (toplam ${toplamKayit} kayıt) başarıyla eklendi!`
+        : `${taksitSayisi} adet taksit başarıyla eklendi!`;
+
       setBasari(true);
-      setBasariMesaji(`${taksitSayisi} adet taksit başarıyla eklendi!`);
+      setBasariMesaji(mesaj);
 
       if (onSozlesmeEklendi) {
         onSozlesmeEklendi();
@@ -265,6 +306,44 @@ const ContractForm = ({ onSozlesmeEklendi }) => {
               required
           />
         </div>
+
+        {/* Peşinat Var mı? */}
+        <div className="flex items-center">
+          <div className="flex items-center h-full">
+            <input
+                type="checkbox"
+                id="pesinat_varmi"
+                name="pesinat_varmi"
+                checked={formData.pesinat_varmi}
+                onChange={handleChange}
+                className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+            />
+            <label htmlFor="pesinat_varmi" className="ml-2 text-sm font-medium text-gray-700">
+              Peşinat Var mı?
+            </label>
+          </div>
+        </div>
+
+        {/* Peşinat Tutarı - Sadece checkbox işaretliyse göster */}
+        {formData.pesinat_varmi && (
+          <div>
+            <label htmlFor="pesinat_tutari" className="block text-sm font-medium text-gray-700 mb-2">
+              Peşinat Tutarı (₺) *
+            </label>
+            <input
+                type="number"
+                id="pesinat_tutari"
+                name="pesinat_tutari"
+                value={formData.pesinat_tutari}
+                onChange={handleChange}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition"
+                placeholder="Örn: 5000.00"
+                min="0"
+                step="0.01"
+                required={formData.pesinat_varmi}
+            />
+          </div>
+        )}
           </div>
 
           {hata && (
